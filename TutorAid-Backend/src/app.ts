@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 
 import streamRoutes from "./routes/stream.routes";
+import studentRoutes from "./routes/student.routes";
 
 const app = express();
 
@@ -17,5 +18,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/stream", streamRoutes);
+
+app.use("/student", studentRoutes);
 
 export default app;
