@@ -1,52 +1,68 @@
 import { Request, Response } from "express";
 
-import streamService from "../services/stream.service";
+import {
+  createUserToken,
+  createCall,
+  getActiveCall,
+  endCall,
+} from "../services/stream.service";
 
 export async function generateToken(
   req: Request,
   res: Response
 ) {
-
   try {
-
     const { userId } = req.body;
 
     if (!userId) {
-
       return res.status(400).json({
-        success:false,
-        message:"userId required"
+        success: false,
+        message: "userId required",
       });
-
     }
 
-    const token =
-      await streamService.generateToken(
-        userId
-      );
+    const token = await createUserToken(userId);
 
     return res.json({
-
-      success:true,
-
+      success: true,
       token,
-
-      userId
-
+      userId,
     });
-
-  }
-
-  catch(error){
-
+  } catch (error) {
     return res.status(500).json({
-
-      success:false,
-
-      error
-
+      success: false,
+      error,
     });
-
   }
+}
 
+export function createInstantCall(
+  _req: Request,
+  res: Response
+) {
+  return res.json({
+    success: true,
+    ...createCall(),
+  });
+}
+
+export function activeCall(
+  _req: Request,
+  res: Response
+) {
+  return res.json({
+    success: true,
+    callId: getActiveCall(),
+  });
+}
+
+export function finishCall(
+  _req: Request,
+  res: Response
+) {
+  endCall();
+
+  return res.json({
+    success: true,
+  });
 }

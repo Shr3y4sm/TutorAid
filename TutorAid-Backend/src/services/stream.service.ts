@@ -1,24 +1,33 @@
-import { streamClient } from "../config/stream";
+import { StreamClient } from "@stream-io/node-sdk";
+import dotenv from "dotenv";
 
-class StreamService {
+dotenv.config();
 
-  async generateToken(userId: string) {
+const client = new StreamClient(
+  process.env.STREAM_API_KEY!,
+  process.env.STREAM_SECRET!
+);
 
-    await streamClient.upsertUsers([
-      {
-        id: userId,
-        role: "user",
-      },
-    ]);
+let activeCallId: string | null = null;
 
-    const token =
-      streamClient.generateUserToken({
-        user_id: userId,
-      });
-
-    return token;
-  }
-
+export async function createUserToken(userId: string) {
+  return client.createToken(userId);
 }
 
-export default new StreamService();
+export function createCall() {
+  activeCallId = `room-${Date.now()}`;
+
+  return {
+    callId: activeCallId,
+  };
+}
+
+export function getActiveCall() {
+  return activeCallId;
+}
+
+export function endCall() {
+  activeCallId = null;
+
+  return true;
+}
