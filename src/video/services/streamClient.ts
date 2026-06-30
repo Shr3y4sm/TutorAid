@@ -4,55 +4,38 @@ import {
 } from "@stream-io/video-react-native-sdk";
 
 import { STREAM_API_KEY } from "../constants";
+import { getStreamToken } from "@/api/streamApi";
 
 class StreamClientService {
-  private static instance: StreamClientService;
-
   private client: StreamVideoClient | null = null;
 
-  private constructor() {}
-
-  public static getInstance(): StreamClientService {
-    if (!StreamClientService.instance) {
-      StreamClientService.instance =
-        new StreamClientService();
-    }
-
-    return StreamClientService.instance;
-  }
-
-  public getClient() {
+  getClient() {
     return this.client;
   }
 
-  public async initialize(
-    user: User,
-    token: string
-  ) {
-    if (this.client) {
-      return this.client;
-    }
+  async initialize(user: User) {
+    if (this.client) return this.client;
 
     this.client = StreamVideoClient.getOrCreateInstance({
       apiKey: STREAM_API_KEY,
       user,
-      token,
+      tokenProvider: async () => {
+        const response = await getStreamToken(user.id);
+
+        return response.token;
+      },
     });
 
     return this.client;
   }
 
-  public async disconnect() {
+  async disconnect() {
     if (!this.client) return;
 
     await this.client.disconnectUser();
 
     this.client = null;
   }
-
-  public isInitialized() {
-    return this.client !== null;
-  }
 }
 
-export default StreamClientService.getInstance();
+export default new StreamClientService();

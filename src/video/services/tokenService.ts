@@ -1,22 +1,13 @@
-export interface StreamTokenResponse {
-  token: string;
-}
+import { getStreamToken } from "@/api/streamApi";
 
 class TokenService {
-  async getToken(
-    userId: string
-  ): Promise<StreamTokenResponse> {
-    throw new Error(
-      "Token endpoint not implemented."
-    );
-  }
+  async getToken(userId: string) {
+    const response =
+      await getStreamToken(userId);
 
-  async refreshToken(
-    userId: string
-  ): Promise<StreamTokenResponse> {
-    throw new Error(
-      "Refresh endpoint not implemented."
-    );
+    return {
+      token: response.token,
+    };
   }
 }
 

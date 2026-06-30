@@ -8,39 +8,47 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+
+import mockAuth from "../services/mockAuth";
+
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
+    if (!email || !password) {
+      return;
+    }
+
     setLoading(true);
 
-    // Backend authentication will be added later
+    try {
+      const user = await mockAuth.login(email, password);
 
-    setTimeout(() => {
+      router.push({
+        pathname: "/(auth)/role-selection",
+        params: {
+          role: user.role,
+        },
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   }
 
   return (
     <SafeAreaView style={styles.container}>
-
       <View style={styles.header}>
-
-        <Text style={styles.logo}>
-          TutorAid
-        </Text>
+        <Text style={styles.logo}>TutorAid</Text>
 
         <Text style={styles.subtitle}>
           Learn Anywhere. Teach Everywhere.
         </Text>
-
       </View>
 
       <View style={styles.form}>
-
         <TextInput
           placeholder="Email"
           placeholderTextColor="#888"
@@ -64,110 +72,67 @@ export default function LoginScreen() {
           onPress={handleLogin}
         >
           {loading ? (
-            <ActivityIndicator color="#FFF"/>
+            <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.buttonText}>
-              Login
-            </Text>
+            <Text style={styles.buttonText}>Login</Text>
           )}
         </TouchableOpacity>
-
       </View>
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-
-  container:{
-
-    flex:1,
-
-    backgroundColor:"#F8FAFC",
-
-    justifyContent:"center",
-
-    paddingHorizontal:24
-
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
 
-  header:{
-
-    marginBottom:50,
-
-    alignItems:"center"
-
+  header: {
+    marginBottom: 50,
+    alignItems: "center",
   },
 
-  logo:{
-
-    fontSize:40,
-
-    fontWeight:"700",
-
-    color:"#2563EB"
-
+  logo: {
+    fontSize: 40,
+    fontWeight: "700",
+    color: "#2563EB",
   },
 
-  subtitle:{
-
-    marginTop:10,
-
-    fontSize:16,
-
-    color:"#64748B"
-
+  subtitle: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#64748B",
   },
 
-  form:{
-
-    gap:18
-
+  form: {
+    gap: 18,
   },
 
-  input:{
-
-    backgroundColor:"#FFF",
-
-    borderRadius:14,
-
-    paddingHorizontal:18,
-
-    height:58,
-
-    fontSize:16,
-
-    borderWidth:1,
-
-    borderColor:"#E5E7EB"
-
+  input: {
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    height: 58,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
 
-  button:{
-
-    height:58,
-
-    backgroundColor:"#2563EB",
-
-    borderRadius:14,
-
-    justifyContent:"center",
-
-    alignItems:"center",
-
-    marginTop:15
-
+  button: {
+    height: 58,
+    backgroundColor: "#2563EB",
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
   },
 
-  buttonText:{
-
-    color:"#FFF",
-
-    fontSize:18,
-
-    fontWeight:"600"
-
-  }
-
+  buttonText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
 });

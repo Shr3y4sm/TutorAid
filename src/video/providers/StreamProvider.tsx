@@ -1,30 +1,63 @@
-import React, { useEffect } from "react";
-import { StreamVideo } from "@stream-io/video-react-native-sdk";
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+
+import { User } from "@stream-io/video-react-native-sdk";
 
 import streamClient from "../services/streamClient";
+import {
+  StreamContextType,
+  StreamUser,
+} from "../types/video";
 
-interface Props {
-  children: React.ReactNode;
-}
+const StreamContext =
+  createContext<StreamContextType | null>(null);
 
-export default function StreamProvider({
+export function StreamProvider({
   children,
-}: Props) {
-  const client = streamClient.getClient();
+}: React.PropsWithChildren) {
+  const [initialized, setInitialized] =
+    useState(false);
 
-  useEffect(() => {
-    return () => {
-      streamClient.disconnect();
-    };
-  }, []);
+  async function initialize(user: StreamUser) {
+    await streamClient.initialize(user as User);
 
-  if (!client) {
-    return <>{children}</>;
+    setInitialized(true);
   }
 
-  return (
-    <StreamVideo client={client}>
-      {children}
-    </StreamVideo>
+  async function disconnect() {
+    await streamClient.disconnect();
+
+    setInitialized(false);
+  }
+
+  const value = useMemo(
+    () => ({
+      initialized,
+      initialize,
+      disconnect,
+    }),
+    [initialized]
   );
+
+  return (
+    <StreamContext.Provider value={value}>
+      {children}
+    </StreamContext.Provider>
+  );
+}
+
+export function useStreamContext() {
+  const context = useContext(StreamContext);
+
+  if (!context) {
+    throw new Error(
+      "useStreamContext must be used inside StreamProvider."
+    );
+  }
+
+  return context;
 }
