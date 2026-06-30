@@ -1,24 +1,7 @@
-import { View, Text } from "react-native";
+import { Redirect } from "expo-router";
 
-export default function Home() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 28,
-          fontWeight: "bold",
-        }}
-      >
-        TutorAid
-      </Text>
+export default function Index(){
 
-      <Text>Home Tutor Video Platform</Text>
-    </View>
-  );
+    return <Redirect href="/(auth)/login" />
+
 }

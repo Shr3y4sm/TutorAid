@@ -7,22 +7,39 @@
     "icon": "./assets/images/icon.png",
     "scheme": "tutoraid",
     "userInterfaceStyle": "automatic",
+
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.shr3y4sm.TutorAid",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "TutorAid requires camera access for video classes.",
+        "NSMicrophoneUsageDescription": "TutorAid requires microphone access for video classes."
+      }
     },
+
     "android": {
+      "package": "com.shr3y4sm.TutorAid",
+      "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "BLUETOOTH",
+        "BLUETOOTH_CONNECT"
+      ]
     },
+
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       [
@@ -34,11 +51,31 @@
             "imageWidth": 76
           }
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 24
+          },
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      "@config-plugins/react-native-webrtc"
     ],
+
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bab44444-30d1-44f2-9d2a-f963a3731395"
+      }
     }
   }
 }
