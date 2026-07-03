@@ -1,3 +1,8 @@
+export interface Teacher {
+  name: string;
+  subject: string;
+}
+
 export interface TeacherStats {
   todayClasses: number;
   totalStudents: number;
@@ -24,22 +29,15 @@ export interface Activity {
   text: string;
 }
 
-export interface TeacherDashboard {
-  teacher: {
-    name: string;
-    subject: string;
-  };
-
+export interface TeacherDashboardData {
+  teacher: Teacher;
   stats: TeacherStats;
-
   quickActions: QuickAction[];
-
   todayClasses: TodayClass[];
-
   recentActivity: Activity[];
 }
 
 export interface TeacherDashboardResponse {
   success: boolean;
-  data: TeacherDashboard;
+  data: TeacherDashboardData;
 }
