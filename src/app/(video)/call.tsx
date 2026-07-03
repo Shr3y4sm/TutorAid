@@ -1,39 +1,36 @@
-import React from "react";
-import {
-  View,
-  StyleSheet,
-  ActivityIndicator,
-} from "react-native";
-
-import {
-  StreamCall,
-  CallContent,
-} from "@stream-io/video-react-native-sdk";
-
-import { useCallProvider } from "@/video/providers/CallProvider";
+import { View, Text, StyleSheet } from "react-native";
 
 export default function CallScreen() {
-  const { call } = useCallProvider();
-
-  if (!call) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
-    <StreamCall call={call}>
-      <CallContent />
-    </StreamCall>
+    <View style={styles.container}>
+      <Text style={styles.title}>
+        Video Module Deferred
+      </Text>
+
+      <Text style={styles.subtitle}>
+        Stream Video will be enabled after the rest of TutorAid is complete.
+      </Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  loader: {
+  container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#64748B",
   },
 });

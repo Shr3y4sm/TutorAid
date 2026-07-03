@@ -1,5 +1,14 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+
+import { getNotifications } from "@/api/notifications";
 
 type HeaderProps = {
   name: string;
@@ -10,6 +19,26 @@ export default function Header({
   name,
   subtitle,
 }: HeaderProps) {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  async function loadNotifications() {
+    try {
+      const notifications = await getNotifications();
+
+      const unread = notifications.filter(
+        (item) => !item.read
+      ).length;
+
+      setUnreadCount(unread);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <View>
@@ -26,12 +55,25 @@ export default function Header({
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.notification}>
+      <TouchableOpacity
+        style={styles.notification}
+        onPress={() =>
+          router.push("/(student)/notifications")
+        }
+      >
         <Ionicons
           name="notifications-outline"
           size={24}
           color="#111827"
         />
+
+        {unreadCount > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {unreadCount}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -72,5 +114,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 3,
+    position: "relative",
+  },
+
+  badge: {
+    position: "absolute",
+    right: 2,
+    top: 2,
+    backgroundColor: "#DC2626",
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 5,
+  },
+
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

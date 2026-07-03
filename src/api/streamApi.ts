@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiClient";
+import { api } from "./client";
 
 export interface StreamTokenResponse {
   success: boolean;
@@ -7,7 +7,7 @@ export interface StreamTokenResponse {
 }
 
 export async function getStreamToken(userId: string) {
-  return apiRequest<StreamTokenResponse>(
+  return api<StreamTokenResponse>(
     "/stream/token",
     {
       method: "POST",

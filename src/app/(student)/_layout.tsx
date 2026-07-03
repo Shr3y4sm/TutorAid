@@ -34,37 +34,57 @@ export default function StudentLayout() {
         options={{
           title: "Assignments",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text" color={color} size={size} />
+            <Ionicons
+              name="document-text"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="ai"
+        name="attendance"
         options={{
-          title: "AI Tutor",
+          title: "Attendance",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="sparkles" color={color} size={size} />
+            <Ionicons
+              name="checkmark-circle"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
-
 
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" color={color} size={size} />
+            <Ionicons
+              name="person"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
+
       <Tabs.Screen
-  name="course-details"
-  options={{
-    href: null,
-  }}
-/>
+        name="course-details"
+        options={{
+          href: null,
+        }}
+      />
+
+      {/* Hidden for now. Will be moved to Teacher Module */}
+      <Tabs.Screen
+        name="ai"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

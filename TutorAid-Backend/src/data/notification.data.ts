@@ -1,0 +1,42 @@
+export const notificationsData = [
+  {
+    id: 1,
+    type: "assignment",
+    title: "Assignment Due",
+    message: "Machine Learning Assignment 3 is due tomorrow.",
+    time: "Today • 10:30 AM",
+    read: false,
+  },
+  {
+    id: 2,
+    type: "course",
+    title: "New Course Material",
+    message: "DBMS Unit 5 notes have been uploaded.",
+    time: "Yesterday • 04:15 PM",
+    read: true,
+  },
+  {
+    id: 3,
+    type: "attendance",
+    title: "Attendance Alert",
+    message: "Your DBMS attendance has dropped below 80%.",
+    time: "Yesterday • 11:20 AM",
+    read: false,
+  },
+  {
+    id: 4,
+    type: "announcement",
+    title: "Announcement",
+    message: "Internal Assessment begins next Monday.",
+    time: "2 days ago",
+    read: true,
+  },
+  {
+    id: 5,
+    type: "system",
+    title: "System",
+    message: "Welcome to the new TutorAid student portal.",
+    time: "Last week",
+    read: true,
+  },
+];

@@ -47,3 +47,32 @@ export const dashboard = {
     },
   ],
 };
+
+export const profile = {
+  id: "student1",
+  name: "Shreyas",
+  studentId: "1RV22AI001",
+  department: "Artificial Intelligence & Machine Learning",
+  semester: 6,
+  avatarInitials: "S",
+  academic: {
+    cgpa: 8.7,
+    attendancePercentage: 91,
+    creditsCompleted: 118,
+    currentSemester: 6,
+  },
+  contact: {
+    email: "shreyas@student.tutoraid.edu",
+    phone: "+91 98765 43210",
+  },
+  guardian: {
+    name: "Ramesh M",
+    phone: "+91 98765 12345",
+  },
+  statistics: {
+    assignmentsSubmitted: 14,
+    pendingAssignments: 3,
+    coursesEnrolled: 5,
+    certificates: 2,
+  },
+};
