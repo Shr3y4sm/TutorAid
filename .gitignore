@@ -44,4 +44,5 @@ example
 .env
 node_modules
 dist
+
 TutorAid-Backend/.env
