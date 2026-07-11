@@ -10,6 +10,9 @@ import notificationRoutes from "./routes/notification.routes";
 import teacherRoutes from "./routes/teacher.routes";
 import teacherStudentRoutes from "./routes/teacherStudent.routes";
 import teacherAssignmentRoutes from "./routes/teacherAssignment.routes";
+import teacherAttendanceRoutes from "./routes/teacherAttendance.routes";
+import teacherScheduleRoutes from "./routes/teacherSchedule.routes";
+import teacherAiRoutes from "./routes/teacherAi.routes";
 const app = express();
 
 app.use(cors());
@@ -32,4 +35,10 @@ app.use("/notifications", notificationRoutes);
 app.use("/teacher", teacherRoutes);
 app.use("/teacher/students", teacherStudentRoutes);
 app.use("/teacher/assignments", teacherAssignmentRoutes);
+app.use(
+    "/teacher/attendance",
+    teacherAttendanceRoutes
+);
+app.use("/teacher/schedule", teacherScheduleRoutes);
+app.use("/teacher/ai", teacherAiRoutes);
 export default app;

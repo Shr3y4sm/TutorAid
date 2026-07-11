@@ -100,16 +100,22 @@ export default function TeacherDashboard() {
           break;
 
         case "Assignments":
-          break;
+    router.push("/(teacher)/assignments");
+    break;
 
         case "Schedule":
-          break;
+    router.push("/(teacher)/schedule");
+    break;
 
         case "AI Assistant":
-          break;
+    router.push("/(teacher)/ai");
+    break;
 
         case "Start Class":
           break;
+          case "Attendance":
+    router.push("/(teacher)/attendance");
+    break;
       }
     }}
   />

@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
-import mockAuth from "../services/mockAuth";
+import { signIn } from "@/services/authService";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -25,14 +25,20 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const user = await mockAuth.login(email, password);
+      const { data, error } = await signIn(
+  email,
+  password
+);
 
-      router.push({
-        pathname: "/(auth)/role-selection",
-        params: {
-          role: user.role,
-        },
-      });
+if (error) {
+  throw error;
+}
+
+if (!data.session) {
+  throw new Error("No session created.");
+}
+
+router.replace("/(auth)/role-selection");
     } finally {
       setLoading(false);
     }
