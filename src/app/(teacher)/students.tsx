@@ -44,14 +44,13 @@ export default function StudentsScreen() {
   }
 }
 
-  const filtered = useMemo(() => {
-    return students.filter((student) =>
-      student.name
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    );
-  }, [students, search]);
-
+ const filtered = useMemo(() => {
+  return students.filter((student) =>
+    student.full_name
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+}, [students, search]);
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
