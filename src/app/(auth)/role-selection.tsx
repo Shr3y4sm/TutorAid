@@ -23,13 +23,13 @@ export default function RoleSelectionScreen() {
     checkSession();
   }, []);
 
-  function continueAsStudent() {
-    router.replace("/(student)/home");
-  }
-
   function continueAsTeacher() {
-    router.replace("/(teacher)/dashboard");
-  }
+  router.replace("/(teacher)/dashboard");
+}
+
+function continueAsStudent() {
+  router.replace("/(student)/home");
+}
 
   return (
     <SafeAreaView style={styles.container}>

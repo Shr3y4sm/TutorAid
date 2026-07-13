@@ -7,22 +7,36 @@ import Spacing from "@/theme/spacing";
 
 interface Props {
   title: string;
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: string;
   onPress?: () => void;
 }
+
+const iconMap: Record<
+  string,
+  keyof typeof Ionicons.glyphMap
+> = {
+  videocam: "videocam-outline",
+  people: "people-outline",
+  "document-text": "document-text-outline",
+  calendar: "calendar-outline",
+  sparkles: "sparkles-outline",
+};
 
 export default function TeacherQuickAction({
   title,
   icon,
   onPress,
 }: Props) {
+  const iconName =
+    iconMap[icon] ?? "ellipse-outline";
+
   return (
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
     >
       <Ionicons
-        name={icon}
+        name={iconName}
         size={28}
         color={Colors.primary}
       />

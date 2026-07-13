@@ -4,22 +4,40 @@ export async function api<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const response = await fetch(
-    `${API_BASE_URL}${endpoint}`,
-    {
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  console.log("🌐 URL:", url);
+
+  const controller = new AbortController();
+
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 10000);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(options?.headers || {}),
       },
-      ...options,
-    }
-  );
+    });
 
-  if (!response.ok) {
-    throw new Error(
-      `API Error ${response.status}`
-    );
+    clearTimeout(timeout);
+
+    console.log("🌐 STATUS:", response.status);
+
+    const json = await response.json();
+
+    console.log("🌐 JSON:", JSON.stringify(json));
+
+    return json;
+  } catch (err) {
+    clearTimeout(timeout);
+
+    console.log("🌐 FETCH ERROR:", err);
+
+    throw err;
   }
-
-  return response.json();
 }

@@ -13,9 +13,9 @@ import Colors from "@/theme/colors";
 import { getTeacherStudents } from "@/api/teacherStudents";
 
 import StudentCard from "@/features/teacher/students/components/StudentCard";
-
+import { getCurrentTeacherId } from "@/services/teacherService";
 import { TeacherStudent } from "@/features/teacher/students/types/student";
-
+import { getCurrentTeacherId } from "@/services/teacherService";
 export default function StudentsScreen() {
   const [students, setStudents] =
     useState<TeacherStudent[]>([]);
@@ -31,15 +31,18 @@ export default function StudentsScreen() {
   }, []);
 
   async function loadStudents() {
-    try {
-      const data =
-        await getTeacherStudents();
+  try {
+    const teacherId = await getCurrentTeacherId();
 
-      setStudents(data);
-    } finally {
-      setLoading(false);
-    }
+    const data = await getTeacherStudents(teacherId);
+
+    setStudents(data);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+}
 
   const filtered = useMemo(() => {
     return students.filter((student) =>

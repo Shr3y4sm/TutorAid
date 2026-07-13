@@ -1,11 +1,13 @@
 import { api } from "./client";
-import { TeacherStudentsResponse } from "@/features/teacher/students/types/student";
+import { TeacherStudent } from "@/features/teacher/students/types/student";
 
-export async function getTeacherStudents(){
-    const response =
-        await api<TeacherStudentsResponse>(
-            "/teacher/students"
-        );
+export async function getTeacherStudents(
+  teacherId: string
+): Promise<TeacherStudent[]> {
+  const response = await api<{
+    success: boolean;
+    data: TeacherStudent[];
+  }>(`/teacher/students?teacherId=${teacherId}`);
 
-    return response.data;
+  return response.data;
 }
