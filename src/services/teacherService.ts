@@ -6,19 +6,35 @@ export async function getCurrentTeacherId(): Promise<string> {
     error: authError,
   } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    throw new Error("User not logged in.");
+  console.log("AUTH USER:", user);
+
+  if (authError) {
+    console.log("AUTH ERROR:", authError);
+    throw authError;
   }
+
+  if (!user) {
+    throw new Error("No logged in user.");
+  }
+
+  console.log("AUTH USER ID:", user.id);
 
   const { data, error } = await supabase
     .from("teachers")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .single();
+    .select("*");
 
-  if (error || !data) {
+  console.log("TEACHERS:", data);
+  console.log("SUPABASE ERROR:", error);
+
+  const teacher = data?.find(
+    (t) => t.auth_user_id === user.id
+  );
+
+  console.log("MATCHED TEACHER:", teacher);
+
+  if (!teacher) {
     throw new Error("Teacher profile not found.");
   }
 
-  return data.id;
+  return teacher.id;
 }

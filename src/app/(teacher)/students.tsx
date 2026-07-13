@@ -15,7 +15,7 @@ import { getTeacherStudents } from "@/api/teacherStudents";
 import StudentCard from "@/features/teacher/students/components/StudentCard";
 import { getCurrentTeacherId } from "@/services/teacherService";
 import { TeacherStudent } from "@/features/teacher/students/types/student";
-import { getCurrentTeacherId } from "@/services/teacherService";
+//import { getCurrentTeacherId } from "@/services/teacherService";
 export default function StudentsScreen() {
   const [students, setStudents] =
     useState<TeacherStudent[]>([]);
