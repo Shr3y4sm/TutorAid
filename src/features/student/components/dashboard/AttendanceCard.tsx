@@ -1,6 +1,12 @@
 import { View, Text, StyleSheet } from "react-native";
 
-export default function AttendanceCard() {
+interface Props {
+  attendance: number;
+}
+
+export default function AttendanceCard({
+  attendance,
+}: Props) {
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -9,7 +15,7 @@ export default function AttendanceCard() {
         </Text>
 
         <Text style={styles.percent}>
-          91%
+          {attendance}%
         </Text>
       </View>
 
@@ -59,7 +65,7 @@ const styles = StyleSheet.create({
   },
 
   progressFill: {
-    width: "91%",
+    width: "auto",
     height: "100%",
     backgroundColor: "#FFFFFF",
   },

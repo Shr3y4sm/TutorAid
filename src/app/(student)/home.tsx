@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, StyleSheet } from "react-native";
 
 import Header from "@/features/student/components/dashboard/Header";
@@ -6,23 +7,44 @@ import QuickActions from "@/features/student/components/dashboard/QuickActions";
 import ClassCard from "@/features/student/components/dashboard/ClassCard";
 import AnnouncementCard from "@/features/student/components/dashboard/AnnouncementCard";
 
-import {
-  announcements,
-  todaysClasses,
-} from "@/features/student/data/dashboard";
+import { getStudentDashboard } from "@/api/student";
+import { getCurrentStudentId } from "@/services/studentService";
 
 export default function HomeScreen() {
+  const [dashboard, setDashboard] = useState<any>(null);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  async function loadDashboard() {
+    try {
+      const studentId = await getCurrentStudentId();
+
+      const data =
+        await getStudentDashboard(studentId);
+
+      setDashboard(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (!dashboard) return null;
+
   return (
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
     >
       <Header
-        name="Shreyas"
-        subtitle="AIML • 3rd Year"
+        name={dashboard.student.full_name}
+        subtitle={`Semester ${dashboard.student.semester ?? "-"}`}
       />
 
-      <AttendanceCard />
+      <AttendanceCard
+        attendance={dashboard.attendance}
+      />
 
       <Text style={styles.section}>
         Quick Actions
@@ -34,13 +56,13 @@ export default function HomeScreen() {
         Today's Classes
       </Text>
 
-      {todaysClasses.map((item) => (
+      {dashboard.todaysClasses.map((item: any) => (
         <ClassCard
           key={item.id}
           subject={item.subject}
-          teacher={item.teacher}
+          teacher="Faculty"
           room={item.room}
-          time={item.time}
+          time={`${item.start_time} - ${item.end_time}`}
         />
       ))}
 
@@ -48,12 +70,14 @@ export default function HomeScreen() {
         Announcements
       </Text>
 
-      {announcements.map((item) => (
+      {dashboard.announcements.map((item: any) => (
         <AnnouncementCard
           key={item.id}
           title={item.title}
           description={item.description}
-          date={item.date}
+          date={new Date(
+            item.created_at
+          ).toLocaleDateString()}
         />
       ))}
     </ScrollView>

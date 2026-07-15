@@ -36,12 +36,7 @@ export default function TeacherDashboard() {
   console.log("1 - Starting request");
 
   try {
-    const data = await Promise.race([
-      getTeacherDashboard(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request Timeout")), 5000)
-      ),
-    ]);
+    const data = await getTeacherDashboard();
 
     console.log("2 - Success", data);
 
