@@ -1,40 +1,26 @@
 import { View, Text, StyleSheet } from "react-native";
-
 import Colors from "@/theme/colors";
+import { TeacherSchedule } from "../types/schedule";
 
 interface Props {
-  subject: string;
-  section: string;
-  room: string;
-  startTime: string;
-  endTime: string;
-  status: string;
+  schedule: TeacherSchedule;
 }
 
 export default function ScheduleCard({
-  subject,
-  section,
-  room,
-  startTime,
-  endTime,
-  status,
+  schedule,
 }: Props) {
   return (
     <View style={styles.card}>
       <Text style={styles.subject}>
-        {subject}
+        {schedule.subject}
       </Text>
 
       <Text>
-        {section} • {room}
+        {schedule.section} • {schedule.room}
       </Text>
 
       <Text>
-        {startTime} - {endTime}
-      </Text>
-
-      <Text style={styles.status}>
-        {status}
+        {schedule.start_time} - {schedule.end_time}
       </Text>
     </View>
   );
@@ -52,11 +38,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 18,
     marginBottom: 6,
-  },
-
-  status: {
-    marginTop: 10,
-    color: Colors.primary,
-    fontWeight: "700",
   },
 });

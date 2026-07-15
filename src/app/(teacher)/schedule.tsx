@@ -15,7 +15,7 @@ import {
 } from "@/features/teacher/schedule/types/schedule";
 
 import ScheduleCard from "@/features/teacher/schedule/components/ScheduleCard";
-
+import { getCurrentTeacherId } from "@/services/teacherService";
 export default function ScheduleScreen() {
   const [classes, setClasses] =
     useState<TeacherSchedule[]>([]);
@@ -25,11 +25,20 @@ export default function ScheduleScreen() {
   }, []);
 
   async function load() {
+  try {
+    const teacherId =
+      await getCurrentTeacherId();
+
     const data =
-      await getTeacherSchedule();
+      await getTeacherSchedule(
+        teacherId
+      );
 
     setClasses(data);
+  } catch (err) {
+    console.error(err);
   }
+}
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,8 +53,8 @@ export default function ScheduleScreen() {
         }
         renderItem={({ item }) => (
           <ScheduleCard
-            {...item}
-          />
+  schedule={item}
+/>
         )}
       />
     </SafeAreaView>

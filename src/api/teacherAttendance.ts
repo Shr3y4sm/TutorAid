@@ -4,10 +4,12 @@ import {
   TeacherAttendanceResponse,
 } from "@/features/teacher/attendance/types/attendance";
 
-export async function getTeacherAttendance() {
+export async function getTeacherAttendance(
+  teacherId: string
+) {
   const response =
     await api<TeacherAttendanceResponse>(
-      "/teacher/attendance"
+      `/teacher/attendance?teacherId=${teacherId}`
     );
 
   return response.data;

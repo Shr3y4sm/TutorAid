@@ -1,119 +1,73 @@
-import { router } from "expo-router";
-import {
-  Text,
-  TouchableOpacity,
-  View,
-  StyleSheet,
-} from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import Colors from "@/theme/colors";
+import { TeacherAssignment } from "@/features/teacher/assignments/types/assignment";
 
-import { Assignment } from "@/api/assignments";
-import StatusBadge from "@/components/StatusBadge";
-
-type Props = {
-  assignment: Assignment;
-};
+interface Props {
+  assignment: TeacherAssignment;
+}
 
 export default function AssignmentCard({
   assignment,
 }: Props) {
-  function openCourse() {
-    router.push({
-      pathname: "/(student)/course-details",
-      params: {
-        id: assignment.course,
-      },
-    });
-  }
-
   return (
-    <TouchableOpacity
-      style={styles.card}
-      activeOpacity={0.9}
-      onPress={openCourse}
-    >
-      <View style={styles.header}>
-        <View style={styles.titleGroup}>
-          <Text style={styles.title}>
-            {assignment.title}
-          </Text>
-
-          <Text style={styles.course}>
-            {assignment.course}
-          </Text>
-        </View>
-
-        <StatusBadge
-          status={assignment.status}
-        />
-      </View>
-
-      <Text
-        style={styles.description}
-        numberOfLines={2}
-      >
-        {assignment.description}
+    <View style={styles.card}>
+      <Text style={styles.title}>
+        {assignment.title}
       </Text>
 
-      <View style={styles.footer}>
-        <Text style={styles.meta}>
-          Due {assignment.dueDate}
-        </Text>
+      <Text style={styles.subject}>
+        {assignment.subject}
+      </Text>
 
-        <Text style={styles.meta}>
-          {assignment.obtainedMarks === null
-            ? `${assignment.maxMarks} marks`
-            : `${assignment.obtainedMarks}/${assignment.maxMarks} marks`}
+      <Text>
+        Due: {assignment.due_date}
+      </Text>
+
+      <Text>
+        Max Marks: {assignment.max_marks}
+      </Text>
+
+      <Text style={styles.status}>
+        {assignment.status}
+      </Text>
+
+      {assignment.description ? (
+        <Text style={styles.description}>
+          {assignment.description}
         </Text>
-      </View>
-    </TouchableOpacity>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 18,
-    elevation: 3,
-  },
-
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-
-  titleGroup: {
-    flex: 1,
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 14,
   },
 
   title: {
-    fontSize: 20,
     fontWeight: "700",
-    color: "#111827",
+    fontSize: 18,
+    marginBottom: 6,
+    color: Colors.text,
   },
 
-  course: {
-    color: "#64748B",
-    marginTop: 6,
+  subject: {
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+
+  status: {
+    marginTop: 10,
+    color: Colors.primary,
+    fontWeight: "700",
   },
 
   description: {
-    marginTop: 14,
-    color: "#475569",
-    lineHeight: 20,
-  },
-
-  footer: {
-    marginTop: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-
-  meta: {
-    color: "#64748B",
-    fontWeight: "600",
+    marginTop: 8,
+    color: Colors.textSecondary,
   },
 });

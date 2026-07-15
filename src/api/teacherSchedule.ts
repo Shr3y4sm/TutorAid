@@ -4,10 +4,12 @@ import {
   TeacherScheduleResponse,
 } from "@/features/teacher/schedule/types/schedule";
 
-export async function getTeacherSchedule() {
+export async function getTeacherSchedule(
+  teacherId: string
+) {
   const response =
     await api<TeacherScheduleResponse>(
-      "/teacher/schedule"
+      `/teacher/schedule?teacherId=${teacherId}`
     );
 
   return response.data;

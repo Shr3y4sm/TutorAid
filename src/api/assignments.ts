@@ -1,29 +1,13 @@
 import { api } from "./client";
+import { TeacherAssignment } from "@/features/teacher/assignments/types/assignment";
 
-export type AssignmentStatus =
-  | "Pending"
-  | "Submitted"
-  | "Overdue";
-
-export interface Assignment {
-  id: string;
-  title: string;
-  course: string;
-  description: string;
-  dueDate: string;
-  status: AssignmentStatus;
-  maxMarks: number;
-  obtainedMarks: number | null;
-}
-
-interface AssignmentResponse {
-  success: boolean;
-  data: Assignment[];
-}
-
-export async function getAssignments() {
-  const response =
-    await api<AssignmentResponse>("/assignments");
+export async function getTeacherAssignments(
+  teacherId: string
+): Promise<TeacherAssignment[]> {
+  const response = await api<{
+    success: boolean;
+    data: TeacherAssignment[];
+  }>(`/teacher/assignments?teacherId=${teacherId}`);
 
   return response.data;
 }

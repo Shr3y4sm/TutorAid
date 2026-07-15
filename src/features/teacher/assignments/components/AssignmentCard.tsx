@@ -1,39 +1,42 @@
 import { View, Text, StyleSheet } from "react-native";
 
 import Colors from "@/theme/colors";
+import { TeacherAssignment } from "../types/assignment";
 
 interface Props {
-  title: string;
-  subject: string;
-  dueDate: string;
-  submissions: number;
-  totalStudents: number;
-  status: string;
+  assignment: TeacherAssignment;
 }
 
 export default function AssignmentCard({
-  title,
-  subject,
-  dueDate,
-  submissions,
-  totalStudents,
-  status,
+  assignment,
 }: Props) {
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>{title}</Text>
-
-      <Text>{subject}</Text>
-
-      <Text>Due : {dueDate}</Text>
+      <Text style={styles.title}>
+        {assignment.title}
+      </Text>
 
       <Text>
-        Submitted : {submissions}/{totalStudents}
+        Subject : {assignment.subject}
+      </Text>
+
+      <Text>
+        Due : {assignment.due_date}
+      </Text>
+
+      <Text>
+        Max Marks : {assignment.max_marks}
       </Text>
 
       <Text style={styles.status}>
-        {status}
+        {assignment.status}
       </Text>
+
+      {assignment.description ? (
+        <Text style={styles.description}>
+          {assignment.description}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -47,14 +50,19 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontWeight: "700",
     fontSize: 18,
-    marginBottom: 6,
+    fontWeight: "700",
+    marginBottom: 8,
   },
 
   status: {
     marginTop: 10,
-    color: Colors.primary,
     fontWeight: "700",
+    color: Colors.primary,
+  },
+
+  description: {
+    marginTop: 8,
+    color: "#666",
   },
 });

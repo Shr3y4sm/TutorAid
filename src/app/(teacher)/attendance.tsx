@@ -12,7 +12,7 @@ import {
 } from "@/api/teacherAttendance";
 
 import AttendanceStudentCard from "@/features/teacher/attendance/components/AttendanceStudentCard";
-
+import { getCurrentTeacherId } from "@/services/teacherService";
 import {
   TeacherAttendance,
 } from "@/features/teacher/attendance/types/attendance";
@@ -28,11 +28,20 @@ export default function TeacherAttendanceScreen() {
   }, []);
 
   async function load() {
+  try {
+    const teacherId =
+      await getCurrentTeacherId();
+
     const data =
-      await getTeacherAttendance();
+      await getTeacherAttendance(
+        teacherId
+      );
 
     setStudents(data);
+  } catch (err) {
+    console.error(err);
   }
+}
 
   async function toggle(id: number) {
     const updated = students.map((s) =>

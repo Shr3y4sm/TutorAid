@@ -9,7 +9,7 @@ import {
 import Colors from "@/theme/colors";
 
 import { getTeacherAssignments } from "@/api/teacherAssignments";
-
+import { getCurrentTeacherId } from "@/services/teacherService";
 import AssignmentCard from "@/features/teacher/assignments/components/AssignmentCard";
 
 import {
@@ -25,12 +25,16 @@ export default function TeacherAssignmentsScreen() {
   }, []);
 
   async function load() {
-    const data =
-      await getTeacherAssignments();
+  try {
+    const teacherId = await getCurrentTeacherId();
+
+    const data = await getTeacherAssignments(teacherId);
 
     setAssignments(data);
+  } catch (err) {
+    console.error(err);
   }
-
+}
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.heading}>
@@ -43,7 +47,7 @@ export default function TeacherAssignmentsScreen() {
           item.id.toString()
         }
         renderItem={({ item }) => (
-          <AssignmentCard {...item} />
+          <AssignmentCard assignment={item} />
         )}
       />
     </SafeAreaView>

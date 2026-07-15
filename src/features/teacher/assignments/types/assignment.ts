@@ -1,11 +1,21 @@
 export interface TeacherAssignment {
-  id: number;
+  id: string;
+
+  teacher_id: string;
+
   title: string;
-  subject: string;
-  dueDate: string;
-  submissions: number;
-  totalStudents: number;
+
+  description: string | null;
+
+  subject: string | null;
+
+  due_date: string;
+
   status: string;
+
+  max_marks: number;
+
+  created_at: string;
 }
 
 export interface TeacherAssignmentsResponse {

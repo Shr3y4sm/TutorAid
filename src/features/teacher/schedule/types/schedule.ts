@@ -1,11 +1,17 @@
 export interface TeacherSchedule {
-  id: number;
+  id: string;
+
+  teacher_id: string;
+
   subject: string;
+
   section: string;
+
   room: string;
-  startTime: string;
-  endTime: string;
-  status: string;
+
+  start_time: string;
+
+  end_time: string;
 }
 
 export interface TeacherScheduleResponse {
