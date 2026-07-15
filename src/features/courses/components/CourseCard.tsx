@@ -2,26 +2,26 @@ import { router } from "expo-router";
 import {
   View,
   Text,
- TouchableOpacity,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
 
 type Props = {
   id: string;
-  title: string;
-  instructor: string;
-  progress: number;
-  students: number;
-  color: string;
+  course_name: string;
+  description: string;
+  course_code: string;
+  semester: number;
+  section: string;
 };
 
 export default function CourseCard({
   id,
-  title,
-  instructor,
-  progress,
-  students,
-  color,
+  course_name,
+  description,
+  course_code,
+  semester,
+  section,
 }: Props) {
   return (
     <TouchableOpacity
@@ -34,37 +34,26 @@ export default function CourseCard({
         })
       }
     >
-      <View
-        style={[
-          styles.colorBar,
-          { backgroundColor: color },
-        ]}
-      />
-
       <Text style={styles.title}>
-        {title}
+        {course_name}
       </Text>
 
-      <Text style={styles.teacher}>
-        {instructor}
+      <Text style={styles.code}>
+        {course_code}
       </Text>
 
-      <View style={styles.progressBackground}>
-        <View
-          style={[
-            styles.progress,
-            {
-              width: `${progress}%`,
-              backgroundColor: color,
-            },
-          ]}
-        />
-      </View>
+      <Text style={styles.description}>
+        {description}
+      </Text>
 
       <View style={styles.footer}>
-        <Text>{progress}% Complete</Text>
+        <Text style={styles.meta}>
+          Semester {semester}
+        </Text>
 
-        <Text>{students} Students</Text>
+        <Text style={styles.meta}>
+          Section {section}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -79,40 +68,32 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
 
-  colorBar: {
-    width: 50,
-    height: 6,
-    borderRadius: 4,
-    marginBottom: 15,
-  },
-
   title: {
     fontSize: 20,
     fontWeight: "700",
     color: "#111827",
   },
 
-  teacher: {
-    color: "#64748B",
+  code: {
     marginTop: 6,
-    marginBottom: 18,
+    color: "#2563EB",
+    fontWeight: "600",
   },
 
-  progressBackground: {
-    height: 8,
-    backgroundColor: "#E5E7EB",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-
-  progress: {
-    height: "100%",
-    borderRadius: 4,
+  description: {
+    marginTop: 12,
+    color: "#64748B",
+    lineHeight: 20,
   },
 
   footer: {
-    marginTop: 15,
+    marginTop: 18,
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+
+  meta: {
+    color: "#64748B",
+    fontWeight: "600",
   },
 });

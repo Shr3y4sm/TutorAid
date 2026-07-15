@@ -117,104 +117,41 @@ export default function ProfileScreen() {
         />
       }
     >
-      <ProfileHeaderCard
-        profile={profile}
-      />
-
+      <ProfileHeaderCard profile={profile} />
       <ProfileSectionCard title="Academic Information">
-        <ProfileInfoRow
-          label="CGPA"
-          value={profile.academic.cgpa}
-        />
+  <ProfileInfoRow
+    label="Semester"
+    value={profile.semester ?? "-"}
+  />
 
-        <ProfileInfoRow
-          label="Attendance"
-          value={`${profile.academic.attendancePercentage}%`}
-        />
+  <ProfileInfoRow
+    label="Year"
+    value={profile.year ?? "-"}
+  />
 
-        <ProfileInfoRow
-          label="Credits Completed"
-          value={profile.academic.creditsCompleted}
-        />
+  <ProfileInfoRow
+    label="Section"
+    value={profile.section ?? "-"}
+  />
 
-        <ProfileInfoRow
-          label="Current Semester"
-          value={profile.academic.currentSemester}
-        />
-      </ProfileSectionCard>
+  <ProfileInfoRow
+    label="Course"
+    value={profile.course ?? "-"}
+  />
+</ProfileSectionCard>
 
-      <ProfileSectionCard title="Contact Information">
-        <ProfileInfoRow
-          label="Email"
-          value={profile.contact.email}
-        />
+     <ProfileSectionCard title="Contact Information">
+  <ProfileInfoRow
+    label="Email"
+    value={profile.email ?? "-"}
+  />
 
-        <ProfileInfoRow
-          label="Phone"
-          value={profile.contact.phone}
-        />
-      </ProfileSectionCard>
+  <ProfileInfoRow
+    label="Phone"
+    value={profile.phone ?? "-"}
+  />
+</ProfileSectionCard>
 
-      <ProfileSectionCard title="Parent / Guardian">
-        <ProfileInfoRow
-          label="Name"
-          value={profile.guardian.name}
-        />
-
-        <ProfileInfoRow
-          label="Phone"
-          value={profile.guardian.phone}
-        />
-      </ProfileSectionCard>
-
-      <Text style={styles.sectionTitle}>
-        Quick Statistics
-      </Text>
-
-      <View style={styles.statsGrid}>
-        <ProfileStatCard
-          label="Assignments Submitted"
-          value={profile.statistics.assignmentsSubmitted}
-        />
-
-        <ProfileStatCard
-          label="Pending Assignments"
-          value={profile.statistics.pendingAssignments}
-        />
-
-        <ProfileStatCard
-          label="Courses Enrolled"
-          value={profile.statistics.coursesEnrolled}
-        />
-
-        <ProfileStatCard
-          label="Certificates"
-          value={profile.statistics.certificates}
-        />
-      </View>
-
-      <ProfileSectionCard title="Actions">
-        <ProfileActionButton
-          title="Edit Profile"
-          icon="create-outline"
-        />
-
-        <ProfileActionButton
-          title="Change Password"
-          icon="lock-closed-outline"
-        />
-
-        <ProfileActionButton
-          title="Settings"
-          icon="settings-outline"
-        />
-
-        <ProfileActionButton
-          title="Logout"
-          icon="log-out-outline"
-          color="#DC2626"
-        />
-      </ProfileSectionCard>
     </ScrollView>
   );
 }

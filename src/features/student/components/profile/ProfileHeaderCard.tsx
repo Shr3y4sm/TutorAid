@@ -13,29 +13,36 @@ type Props = {
 export default function ProfileHeaderCard({
   profile,
 }: Props) {
+  const initials =
+    profile.full_name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2);
+
   return (
     <View style={styles.card}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
-          {profile.avatarInitials}
+          {initials}
         </Text>
       </View>
 
       <View style={styles.details}>
         <Text style={styles.name}>
-          {profile.name}
+          {profile.full_name}
         </Text>
 
         <Text style={styles.meta}>
-          {profile.studentId}
+          {profile.roll_no}
         </Text>
 
         <Text style={styles.meta}>
-          {profile.department}
+          {profile.course ?? "AIML"}
         </Text>
 
         <Text style={styles.semester}>
-          Semester {profile.semester}
+          Semester {profile.semester ?? "-"}
         </Text>
       </View>
     </View>

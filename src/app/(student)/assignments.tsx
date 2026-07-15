@@ -9,15 +9,13 @@ import {
   StyleSheet,
 } from "react-native";
 
-import {
-  Assignment,
-  getAssignments,
-} from "@/api/assignments";
+import { getAssignments } from "@/api/assignments";
+import { TeacherAssignment } from "@/features/teacher/assignments/types/assignment";
 import AssignmentCard from "@/features/assignments/components/AssignmentCard";
-
+import { getCurrentStudentId } from "@/services/studentService";
 export default function AssignmentsScreen() {
   const [assignments, setAssignments] =
-    useState<Assignment[]>([]);
+  useState<TeacherAssignment[]>([]);
   const [loading, setLoading] =
     useState(true);
   const [refreshing, setRefreshing] =
@@ -30,22 +28,26 @@ export default function AssignmentsScreen() {
   }, []);
 
   async function loadAssignments() {
-    try {
-      setError(null);
+  try {
+    setError(null);
 
-      const data = await getAssignments();
+    const studentId =
+      await getCurrentStudentId();
 
-      setAssignments(data);
-    } catch (loadError) {
-      console.log(loadError);
+    const data =
+      await getAssignments(studentId);
 
-      setError(
-        "Unable to load assignments."
-      );
-    } finally {
-      setLoading(false);
-    }
+    setAssignments(data);
+  } catch (loadError) {
+    console.log(loadError);
+
+    setError(
+      "Unable to load assignments."
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   async function refreshAssignments() {
     setRefreshing(true);

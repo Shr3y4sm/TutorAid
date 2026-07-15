@@ -11,7 +11,7 @@ import {
   Course,
   getCourses,
 } from "@/api/courses";
-
+import { getCurrentStudentId } from "@/services/studentService";
 export default function CoursesScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,15 +21,20 @@ export default function CoursesScreen() {
   }, []);
 
   async function loadCourses() {
-    try {
-      const data = await getCourses();
-      setCourses(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
+  try {
+    const studentId =
+      await getCurrentStudentId();
+
+    const data =
+      await getCourses(studentId);
+
+    setCourses(data);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
   }
+}
 
   if (loading) {
     return (

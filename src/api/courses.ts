@@ -2,12 +2,11 @@ import { api } from "./client";
 
 export interface Course {
   id: string;
-  title: string;
-  instructor: string;
-  progress: number;
-  students: number;
-  color: string;
+  course_name: string;
   description: string;
+  course_code: string;
+  semester: number;
+  section: string;
 }
 
 interface CourseResponse {
@@ -20,15 +19,22 @@ interface SingleCourseResponse {
   data: Course;
 }
 
-export async function getCourses() {
-  const response = await api<CourseResponse>("/courses");
+export async function getCourses(
+  studentId: string
+) {
+  const response =
+    await api<CourseResponse>(
+      `/courses?studentId=${studentId}`
+    );
+
   return response.data;
 }
 
 export async function getCourse(id: string) {
-  const response = await api<SingleCourseResponse>(
-    `/courses/${id}`
-  );
+  const response =
+    await api<SingleCourseResponse>(
+      `/courses/${id}`
+    );
 
   return response.data;
 }

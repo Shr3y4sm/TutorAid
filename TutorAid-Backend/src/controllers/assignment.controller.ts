@@ -1,12 +1,43 @@
 import { Request, Response } from "express";
-import { assignments } from "../data/assignment.data";
+import supabase from "../config/supabase";
 
-export function getAssignments(
-  _req: Request,
+export async function getAssignments(
+  req: Request,
   res: Response
 ) {
-  res.status(200).json({
-    success: true,
-    data: assignments,
-  });
+  try {
+    const studentId = req.query.studentId as string;
+
+    const { data, error } = await supabase
+      .from("student_courses")
+      .select(`
+        course_id,
+        courses!inner(
+          assignments(*)
+        )
+      `)
+      .eq("student_id", studentId);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    const assignments =
+      data.flatMap(
+        (x: any) => x.courses.assignments
+      );
+
+    res.json({
+      success: true,
+      data: assignments,
+    });
+  } catch {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
 }

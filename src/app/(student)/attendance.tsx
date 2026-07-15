@@ -15,7 +15,7 @@ import AttendanceSummary from "@/features/attendance/components/AttendanceSummar
 import SubjectAttendanceRow from "@/features/attendance/components/SubjectAttendanceRow";
 
 import { AttendanceData } from "@/features/attendance/types/attendance";
-
+import { getCurrentStudentId } from "@/services/studentService";
 export default function AttendanceScreen() {
   const [attendance, setAttendance] =
     useState<AttendanceData | null>(null);
@@ -28,7 +28,11 @@ export default function AttendanceScreen() {
     try {
       setError("");
 
-      const data = await getAttendance();
+      const studentId =
+  await getCurrentStudentId();
+
+const data =
+  await getAttendance(studentId);
 
       setAttendance(data);
     } catch {

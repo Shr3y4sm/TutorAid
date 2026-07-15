@@ -1,33 +1,74 @@
 import { Request, Response } from "express";
-import { courses } from "../data/course.data";
+import supabase from "../config/supabase";
 
-export function getCourses(
-  _req: Request,
-  res: Response
-) {
-  res.status(200).json({
-    success: true,
-    data: courses,
-  });
-}
-
-export function getCourse(
+export async function getCourses(
   req: Request,
   res: Response
 ) {
-  const course = courses.find(
-    (c) => c.id === req.params.id
-  );
+  try {
+    const studentId = req.query.studentId as string;
 
-  if (!course) {
-    return res.status(404).json({
+    const { data, error } = await supabase
+      .from("student_courses")
+      .select(`
+        course:courses (
+          id,
+          course_name,
+          description,
+          course_code,
+          semester,
+          section
+        )
+      `)
+      .eq("student_id", studentId);
+
+    if (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: data.map((x: any) => x.course),
+    });
+  } catch {
+    res.status(500).json({
       success: false,
-      message: "Course not found",
+      message: "Internal Server Error",
     });
   }
+}
 
-  return res.status(200).json({
-    success: true,
-    data: course,
-  });
+export async function getCourse(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from("courses")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      data,
+    });
+  } catch {
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
 }
