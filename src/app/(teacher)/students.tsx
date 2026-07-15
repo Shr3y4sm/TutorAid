@@ -1,4 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -6,7 +10,9 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
 } from "react-native";
+import { router } from "expo-router";
 
 import Colors from "@/theme/colors";
 
@@ -15,7 +21,7 @@ import { getTeacherStudents } from "@/api/teacherStudents";
 import StudentCard from "@/features/teacher/students/components/StudentCard";
 import { getCurrentTeacherId } from "@/services/teacherService";
 import { TeacherStudent } from "@/features/teacher/students/types/student";
-//import { getCurrentTeacherId } from "@/services/teacherService";
+
 export default function StudentsScreen() {
   const [students, setStudents] =
     useState<TeacherStudent[]>([]);
@@ -31,26 +37,31 @@ export default function StudentsScreen() {
   }, []);
 
   async function loadStudents() {
-  try {
-    const teacherId = await getCurrentTeacherId();
+    try {
+      const teacherId =
+        await getCurrentTeacherId();
 
-    const data = await getTeacherStudents(teacherId);
+      const data =
+        await getTeacherStudents(
+          teacherId
+        );
 
-    setStudents(data);
-  } catch (err) {
-    console.error(err);
-  } finally {
-    setLoading(false);
+      setStudents(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
- const filtered = useMemo(() => {
-  return students.filter((student) =>
-    student.full_name
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
-}, [students, search]);
+  const filtered = useMemo(() => {
+    return students.filter((student) =>
+      student.full_name
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
+  }, [students, search]);
+
   if (loading) {
     return (
       <SafeAreaView style={styles.center}>
@@ -74,13 +85,22 @@ export default function StudentsScreen() {
 
       <FlatList
         data={filtered}
-        keyExtractor={(item) =>
-          item.id.toString()
-        }
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <StudentCard student={item} />
         )}
       />
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() =>
+          router.push("/(teacher)/add-student" as any)
+        }
+      >
+        <Text style={styles.fabText}>
+          +
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -106,9 +126,28 @@ const styles = StyleSheet.create({
   },
 
   search: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 14,
     marginBottom: 18,
+  },
+
+  fab: {
+    position: "absolute",
+    right: 24,
+    bottom: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+  },
+
+  fabText: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontWeight: "700",
   },
 });

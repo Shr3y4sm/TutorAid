@@ -18,23 +18,11 @@ export default function StudentCard({ student }: Props) {
       </Text>
 
       <Text style={styles.info}>
-        Roll No: {student.roll_no}
+        Class: {student.class ?? "-"}
       </Text>
 
       <Text style={styles.info}>
-        Course: {student.course ?? "Not Assigned"}
-      </Text>
-
-      <Text style={styles.info}>
-        Year: {student.year ?? "-"}
-      </Text>
-
-      <Text style={styles.info}>
-        Semester: {student.semester ?? "-"}
-      </Text>
-
-      <Text style={styles.info}>
-        Section: {student.section ?? "-"}
+        Roll No: {student.roll_no ?? "-"}
       </Text>
 
       <Text style={styles.info}>
@@ -43,6 +31,14 @@ export default function StudentCard({ student }: Props) {
 
       <Text style={styles.info}>
         Phone: {student.phone ?? "-"}
+      </Text>
+
+      <Text style={styles.info}>
+        Parent: {student.parent_name ?? "-"}
+      </Text>
+
+      <Text style={styles.info}>
+        Parent Phone: {student.parent_phone ?? "-"}
       </Text>
     </View>
   );

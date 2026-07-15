@@ -11,13 +11,19 @@ export async function signIn(
 }
 
 export async function signUp(
-    email: string,
-    password: string
-){
-    return supabase.auth.signUp({
-        email,
-        password,
-    });
+  fullName: string,
+  email: string,
+  password: string
+) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      },
+    },
+  });
 }
 
 export async function signOut(){
