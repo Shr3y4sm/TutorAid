@@ -12,23 +12,65 @@ export async function getTeacherAssignments(
       .from("assignments")
       .select("*")
       .eq("teacher_id", teacherId)
-      .order("due_date", { ascending: true });
-
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
+      .order("created_at", {
+        ascending: false,
       });
-    }
+
+    if (error) throw error;
 
     res.json({
       success: true,
       data,
     });
-  } catch (err) {
+
+  } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: err.message,
+    });
+  }
+}
+
+export async function createAssignment(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      teacher_id,
+      title,
+      description,
+      subject,
+      due_date,
+      max_marks,
+    } = req.body;
+
+    const { data, error } =
+      await supabase
+        .from("assignments")
+        .insert({
+          teacher_id,
+          title,
+          description,
+          subject,
+          due_date,
+          max_marks,
+          status: "Active",
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
     });
   }
 }

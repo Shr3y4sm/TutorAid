@@ -13,6 +13,9 @@ import teacherAssignmentRoutes from "./routes/teacherAssignment.routes";
 import teacherAttendanceRoutes from "./routes/teacherAttendance.routes";
 import teacherScheduleRoutes from "./routes/teacherSchedule.routes";
 import teacherAiRoutes from "./routes/teacherAi.routes";
+import authRoutes from "./routes/auth.routes";
+
+
 const app = express();
 
 app.use(cors());
@@ -41,4 +44,5 @@ app.use(
 );
 app.use("/teacher/schedule", teacherScheduleRoutes);
 app.use("/teacher/ai", teacherAiRoutes);
+app.use("/auth", authRoutes);
 export default app;

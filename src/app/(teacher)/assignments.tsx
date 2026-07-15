@@ -15,6 +15,7 @@ import AssignmentCard from "@/features/teacher/assignments/components/Assignment
 import {
   TeacherAssignment,
 } from "@/features/teacher/assignments/types/assignment";
+import { router } from "../../../.expo/types/router";
 
 export default function TeacherAssignmentsScreen() {
   const [assignments, setAssignments] =
@@ -67,3 +68,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 });
+
+router.push("/(teacher)/add-assignment" as any);

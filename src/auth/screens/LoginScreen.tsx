@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { signIn } from "@/services/authService";
-
+import { getUserRole } from "@/api/auth";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,7 +38,22 @@ if (!data.session) {
   throw new Error("No session created.");
 }
 
-router.replace("/(auth)/role-selection");
+
+
+try {
+  const role = await getUserRole(
+    data.session.user.id
+  );
+
+  if (role.role === "teacher") {
+    router.replace("/(teacher)/dashboard");
+  } else {
+    router.replace("/(student)/home");
+  }
+
+} catch {
+  router.replace("/(auth)/role-selection");
+}
     } finally {
       setLoading(false);
     }

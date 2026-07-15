@@ -24,11 +24,11 @@ export default function RoleSelectionScreen() {
   }, []);
 
   function continueAsTeacher() {
-  router.replace("/(teacher)/dashboard");
+  router.replace("/(auth)/teacher-profile");
 }
 
 function continueAsStudent() {
-  router.replace("/(student)/home");
+  router.replace("/(auth)/student-profile");
 }
 
   return (

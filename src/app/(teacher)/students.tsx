@@ -1,8 +1,4 @@
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useState } from "react";;
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { router } from "expo-router";
-
+import { useFocusEffect } from "expo-router";
 import Colors from "@/theme/colors";
 
 import { getTeacherStudents } from "@/api/teacherStudents";
@@ -32,9 +28,11 @@ export default function StudentsScreen() {
   const [search, setSearch] =
     useState("");
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     loadStudents();
-  }, []);
+  }, [])
+);
 
   async function loadStudents() {
     try {
