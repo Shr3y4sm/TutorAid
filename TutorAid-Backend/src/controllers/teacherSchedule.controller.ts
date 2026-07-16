@@ -34,3 +34,118 @@ export async function getTeacherSchedule(
     });
   }
 }
+
+export async function createSchedule(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      teacher_id,
+      subject,
+      section,
+      room,
+      start_time,
+      end_time,
+      day,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("schedule")
+      .insert({
+        teacher_id,
+        subject,
+        section,
+        room,
+        start_time,
+        end_time,
+        day,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function updateSchedule(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const {
+      subject,
+      section,
+      room,
+      start_time,
+      end_time,
+      day,
+    } = req.body;
+
+    const { data, error } = await supabase
+      .from("schedule")
+      .update({
+        subject,
+        section,
+        room,
+        start_time,
+        end_time,
+        day,
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function deleteSchedule(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from("schedule")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}

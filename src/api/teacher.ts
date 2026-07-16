@@ -1,5 +1,8 @@
 import { api } from "./client";
-import { TeacherDashboardResponse } from "@/features/teacher/types/teacher";
+
+import {
+  TeacherDashboardResponse,
+} from "@/features/teacher/types/teacher";
 
 export async function getTeacherDashboard(
   teacherId: string

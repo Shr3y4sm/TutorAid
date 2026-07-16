@@ -7,6 +7,7 @@ import {
   View,
   Share,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 
 import * as Clipboard from "expo-clipboard";
@@ -41,23 +42,24 @@ export default function TeacherDashboard() {
   }, []);
 
   async function load() {
-    try {
-      const teacherId =
-        await getCurrentTeacherId();
+  try {
+    const teacherId =
+      await getCurrentTeacherId();
 
-      const data =
-        await getTeacherDashboard(
-          teacherId
-        );
+    const data =
+      await getTeacherDashboard(
+        teacherId
+      );
 
-      setDashboard(data);
-    } catch (err: any) {
-      console.log(err);
-      setError(err.message ?? "Unknown Error");
-    } finally {
-      setLoading(false);
-    }
+    setDashboard(data);
+
+  } catch (err: any) {
+    console.log(err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
   }
+}
 
   if (loading) {
     return (
@@ -110,7 +112,33 @@ export default function TeacherDashboard() {
       <Text style={styles.subject}>
         {dashboard.teacher.subject}
       </Text>
+<View style={styles.codeCard}>
+  <Text style={styles.codeTitle}>
+    Teacher Code
+  </Text>
 
+  <Text style={styles.code}>
+    {dashboard.teacher.teacherCode}
+  </Text>
+
+  <TouchableOpacity
+  style={styles.codeButton}
+  onPress={async () => {
+    await Clipboard.setStringAsync(
+      dashboard.teacher.teacherCode
+    );
+
+    Alert.alert(
+      "Copied",
+      "Teacher code copied."
+    );
+  }}
+>
+  <Text style={styles.codeButtonText}>
+    Copy
+  </Text>
+</TouchableOpacity>
+</View>
       {/* Teacher Code */}
 
       <View style={styles.codeCard}>
@@ -259,6 +287,7 @@ export default function TeacherDashboard() {
 }
 
 const styles = StyleSheet.create({
+  
   container: {
     flex: 1,
     backgroundColor: Colors.background,

@@ -1,8 +1,13 @@
-import { View, Text, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 
 import Colors from "@/theme/colors";
 import { TeacherAssignment } from "../types/assignment";
-
+import { router } from "expo-router";
 interface Props {
   assignment: TeacherAssignment;
 }
@@ -11,7 +16,23 @@ export default function AssignmentCard({
   assignment,
 }: Props) {
   return (
-    <View style={styles.card}>
+  <TouchableOpacity
+  style={styles.card}
+  activeOpacity={0.9}
+  onPress={() =>
+    router.push({
+      pathname: "/(teacher)/assignment-details",
+      params: {
+        id: assignment.id,
+        title: assignment.title,
+        description: assignment.description ?? "",
+        subject: assignment.subject ?? "",
+        due_date: assignment.due_date,
+        max_marks: String(assignment.max_marks),
+      },
+    })
+  }
+>
       <Text style={styles.title}>
         {assignment.title}
       </Text>
@@ -37,7 +58,7 @@ export default function AssignmentCard({
           {assignment.description}
         </Text>
       ) : null}
-    </View>
+    </TouchableOpacity>
   );
 }
 

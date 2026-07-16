@@ -18,14 +18,17 @@ import {
 import { router } from "expo-router";
 import { View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 export default function TeacherAssignmentsScreen() {
   const [assignments, setAssignments] =
     useState<TeacherAssignment[]>([]);
 
-  useEffect(() => {
+  useFocusEffect(
+  useCallback(() => {
     load();
-  }, []);
-
+  }, [])
+);
   async function load() {
   try {
     const teacherId = await getCurrentTeacherId();

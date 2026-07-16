@@ -29,3 +29,42 @@ export async function createAssignment(
 
   return response.data;
 }
+
+export async function updateAssignment(
+  id: string,
+  assignment: TeacherAssignmentCreate
+) {
+  const response = await api<{
+    success: boolean;
+    data: TeacherAssignment;
+  }>(`/teacher/assignments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(assignment),
+  });
+
+  return response.data;
+}
+
+export async function deleteAssignment(
+  id: string
+) {
+  await api(
+    `/teacher/assignments/${id}`,
+    {
+      method: "DELETE",
+    }
+  );
+}
+
+export async function getAssignmentStudents(
+  assignmentId: string
+) {
+  const response = await api<{
+    success: boolean;
+    data: any[];
+  }>(
+    `/teacher/assignments/${assignmentId}/students`
+  );
+
+  return response.data;
+}

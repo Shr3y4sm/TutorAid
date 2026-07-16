@@ -8,31 +8,55 @@ export async function getTeacherDashboard(
   try {
     const teacherId = req.query.teacherId as string;
 
-    // teacher
-    const { data: teacher } = await supabase
-      .from("teachers")
-      .select("*")
-      .eq("id", teacherId)
-      .single();
+    const { data: teacher, error: teacherError } =
+      await supabase
+        .from("teachers")
+        .select("*")
+        .eq("id", teacherId)
+        .single();
 
-    // students count
-    const { count: totalStudents } = await supabase
-      .from("teacher_students")
-      .select("*", { count: "exact", head: true })
-      .eq("teacher_id", teacherId);
+    if (teacherError) throw teacherError;
 
-    // assignments count
-    const { count: totalAssignments } = await supabase
-      .from("assignments")
-      .select("*", { count: "exact", head: true })
-      .eq("teacher_id", teacherId);
+    const { count: totalStudents } =
+      await supabase
+        .from("teacher_students")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("teacher_id", teacherId);
 
-    // schedule
-    const { data: classes } = await supabase
-      .from("schedule")
-      .select("*")
-      .eq("teacher_id", teacherId)
-      .order("start_time");
+    const { count: totalAssignments } =
+      await supabase
+        .from("assignments")
+        .select("*", {
+          count: "exact",
+          head: true,
+        })
+        .eq("teacher_id", teacherId);
+
+    const { data: classes } =
+      await supabase
+        .from("schedule")
+        .select("*")
+        .eq("teacher_id", teacherId)
+        .order("start_time");
+
+    const { data: attendance } =
+      await supabase
+        .from("attendance")
+        .select("present, marked_by")
+        .eq("marked_by", teacherId);
+
+    const present =
+      attendance?.filter(a => a.present).length ?? 0;
+
+    const attendanceToday =
+      attendance && attendance.length > 0
+        ? Math.round(
+            (present / attendance.length) * 100
+          )
+        : 0;
 
     res.json({
       success: true,
@@ -46,8 +70,9 @@ export async function getTeacherDashboard(
         stats: {
           todayClasses: classes?.length ?? 0,
           totalStudents: totalStudents ?? 0,
-          pendingAssignments: totalAssignments ?? 0,
-          attendanceToday: 0,
+          pendingAssignments:
+            totalAssignments ?? 0,
+          attendanceToday,
         },
 
         quickActions: [
@@ -78,7 +103,14 @@ export async function getTeacherDashboard(
           },
         ],
 
-        todayClasses: classes ?? [],
+        todayClasses:
+          (classes ?? []).map((c: any) => ({
+            id: c.id,
+            subject: c.subject,
+            section: c.section,
+            room: c.room,
+            time: `${c.start_time} - ${c.end_time}`,
+          })),
 
         recentActivity: [],
       },
