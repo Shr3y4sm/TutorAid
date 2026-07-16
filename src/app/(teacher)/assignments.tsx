@@ -15,8 +15,9 @@ import AssignmentCard from "@/features/teacher/assignments/components/Assignment
 import {
   TeacherAssignment,
 } from "@/features/teacher/assignments/types/assignment";
-import { router } from "../../../.expo/types/router";
-
+import { router } from "expo-router";
+import { View, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 export default function TeacherAssignmentsScreen() {
   const [assignments, setAssignments] =
     useState<TeacherAssignment[]>([]);
@@ -38,9 +39,24 @@ export default function TeacherAssignmentsScreen() {
 }
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>
-        Assignments
-      </Text>
+      <View style={styles.header}>
+  <Text style={styles.heading}>
+    Assignments
+  </Text>
+
+  <TouchableOpacity
+    style={styles.addButton}
+    onPress={() =>
+      router.push("/(teacher)/add-assignment")
+    }
+  >
+    <Ionicons
+      name="add"
+      size={22}
+      color="white"
+    />
+  </TouchableOpacity>
+</View>
 
       <FlatList
         data={assignments}
@@ -67,6 +83,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 20,
   },
+  header: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 20,
+},
+
+addButton: {
+  width: 42,
+  height: 42,
+  borderRadius: 21,
+  backgroundColor: Colors.primary,
+  justifyContent: "center",
+  alignItems: "center",
+},
 });
 
-router.push("/(teacher)/add-assignment" as any);

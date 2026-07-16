@@ -97,3 +97,112 @@ export async function createStudent(
     });
   }
 }
+
+export async function getStudentById(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const { data, error } =
+      await supabase
+        .from("students")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function updateStudent(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const {
+      full_name,
+      class: studentClass,
+      roll_no,
+      email,
+      phone,
+      parent_name,
+      parent_phone,
+    } = req.body;
+
+    const { data, error } =
+      await supabase
+        .from("students")
+        .update({
+          full_name,
+          class: studentClass,
+          roll_no,
+          email,
+          phone,
+          parent_name,
+          parent_phone,
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function deleteStudent(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    await supabase
+      .from("teacher_students")
+      .delete()
+      .eq("student_id", id);
+
+    const { error } =
+      await supabase
+        .from("students")
+        .delete()
+        .eq("id", id);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}

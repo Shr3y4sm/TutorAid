@@ -5,12 +5,25 @@ import Spacing from "@/theme/spacing";
 import Typography from "@/theme/typography";
 
 import { TeacherStudent } from "../types/student";
-
+import {
+  TouchableOpacity,
+} from "react-native";
 interface Props {
   student: TeacherStudent;
+
+  onView?: () => void;
+
+  onEdit?: () => void;
+
+  onDelete?: () => void;
 }
 
-export default function StudentCard({ student }: Props) {
+export default function StudentCard({
+  student,
+  onView,
+  onEdit,
+  onDelete,
+}: Props) {
   return (
     <View style={styles.card}>
       <Text style={styles.name}>
@@ -40,6 +53,31 @@ export default function StudentCard({ student }: Props) {
       <Text style={styles.info}>
         Parent Phone: {student.parent_phone ?? "-"}
       </Text>
+      <View
+  style={{
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
+  }}
+>
+  <TouchableOpacity onPress={onView}>
+    <Text style={{ color: "#2563EB" }}>
+      View
+    </Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity onPress={onEdit}>
+    <Text style={{ color: "#F59E0B" }}>
+      Edit
+    </Text>
+  </TouchableOpacity>
+
+  <TouchableOpacity onPress={onDelete}>
+    <Text style={{ color: "#DC2626" }}>
+      Delete
+    </Text>
+  </TouchableOpacity>
+</View>
     </View>
   );
 }

@@ -121,19 +121,23 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "center",
-  },
+    backgroundColor: "#F8FAFC",
+},
 
   title: {
     fontSize: 30,
     fontWeight: "700",
     marginBottom: 24,
-  },
+    color: "#111827",
+},
 
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
+    color: "#111827",
     borderRadius: 10,
     padding: 14,
     marginBottom: 16,
-  },
+},
 });

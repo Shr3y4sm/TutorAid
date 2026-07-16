@@ -43,9 +43,10 @@ export async function createAssignment(
       subject,
       due_date,
       max_marks,
+      students,
     } = req.body;
 
-    const { data, error } =
+    const { data: assignment, error } =
       await supabase
         .from("assignments")
         .insert({
@@ -62,9 +63,25 @@ export async function createAssignment(
 
     if (error) throw error;
 
+    if (students?.length) {
+      const links = students.map(
+        (studentId: string) => ({
+          assignment_id: assignment.id,
+          student_id: studentId,
+        })
+      );
+
+      const { error: linkError } =
+        await supabase
+          .from("assignment_students")
+          .insert(links);
+
+      if (linkError) throw linkError;
+    }
+
     res.status(201).json({
       success: true,
-      data,
+      data: assignment,
     });
 
   } catch (err: any) {

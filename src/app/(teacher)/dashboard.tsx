@@ -5,18 +5,26 @@ import {
   StyleSheet,
   Text,
   View,
+  Share,
+  TouchableOpacity,
 } from "react-native";
 
+import * as Clipboard from "expo-clipboard";
+import { router } from "expo-router";
+
+import Colors from "@/theme/colors";
+
 import { getTeacherDashboard } from "@/api/teacher";
-import { TeacherDashboardData } from "@/features/teacher/types/teacher";
+import { getCurrentTeacherId } from "@/services/teacherService";
+
+import {
+  TeacherDashboardData,
+} from "@/features/teacher/types/teacher";
 
 import TeacherStatCard from "@/features/teacher/components/TeacherStatCard";
 import TeacherQuickAction from "@/features/teacher/components/TeacherQuickAction";
 import TeacherClassCard from "@/features/teacher/components/TeacherClassCard";
 import TeacherActivityCard from "@/features/teacher/components/TeacherActivityCard";
-
-import Colors from "@/theme/colors";
-import { router } from "expo-router";
 
 export default function TeacherDashboard() {
   const [dashboard, setDashboard] =
@@ -33,29 +41,30 @@ export default function TeacherDashboard() {
   }, []);
 
   async function load() {
-  console.log("1 - Starting request");
+    try {
+      const teacherId =
+        await getCurrentTeacherId();
 
-  try {
-    const data = await getTeacherDashboard();
+      const data =
+        await getTeacherDashboard(
+          teacherId
+        );
 
-    console.log("2 - Success", data);
-
-    setDashboard(data as TeacherDashboardData);
-  } catch (err: any) {
-    console.log("3 - Error", err);
-    setError(err?.message ?? String(err));
-  } finally {
-    console.log("4 - Finished");
-    setLoading(false);
+      setDashboard(data);
+    } catch (err: any) {
+      console.log(err);
+      setError(err.message ?? "Unknown Error");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   if (loading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 12 }}>
-          Loading dashboard...
+          Loading Dashboard...
         </Text>
       </View>
     );
@@ -67,18 +76,8 @@ export default function TeacherDashboard() {
         <Text
           style={{
             color: "red",
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: "700",
-          }}
-        >
-          Dashboard Error
-        </Text>
-
-        <Text
-          style={{
-            marginTop: 10,
-            textAlign: "center",
-            paddingHorizontal: 20,
           }}
         >
           {error}
@@ -90,7 +89,7 @@ export default function TeacherDashboard() {
   if (!dashboard) {
     return (
       <View style={styles.center}>
-        <Text>No dashboard data.</Text>
+        <Text>No Dashboard Data</Text>
       </View>
     );
   }
@@ -100,7 +99,9 @@ export default function TeacherDashboard() {
       style={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.greeting}>👋 Good Morning</Text>
+      <Text style={styles.greeting}>
+        👋 Good Morning
+      </Text>
 
       <Text style={styles.name}>
         {dashboard.teacher.name}
@@ -110,11 +111,55 @@ export default function TeacherDashboard() {
         {dashboard.teacher.subject}
       </Text>
 
+      {/* Teacher Code */}
+
+      <View style={styles.codeCard}>
+        <Text style={styles.codeTitle}>
+          Your Teacher Code
+        </Text>
+
+        <Text style={styles.code}>
+          {dashboard.teacher.teacherCode}
+        </Text>
+
+        <View style={styles.codeButtons}>
+          <TouchableOpacity
+            style={styles.codeButton}
+            onPress={async () => {
+              await Clipboard.setStringAsync(
+                dashboard.teacher.teacherCode
+              );
+            }}
+          >
+            <Text style={styles.codeButtonText}>
+              Copy
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.codeButton}
+            onPress={() =>
+              Share.share({
+                message:
+                  `Join my TutorAid classroom!\n\nTeacher Code: ${dashboard.teacher.teacherCode}`,
+              })
+            }
+          >
+            <Text style={styles.codeButtonText}>
+              Share
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Stats */}
+
       <View style={styles.stats}>
         <TeacherStatCard
           title="Today's Classes"
           value={dashboard.stats.todayClasses}
         />
+
         <TeacherStatCard
           title="Students"
           value={dashboard.stats.totalStudents}
@@ -124,19 +169,22 @@ export default function TeacherDashboard() {
       <View style={styles.stats}>
         <TeacherStatCard
           title="Assignments"
-          value={dashboard.stats.pendingAssignments}
+          value={
+            dashboard.stats.pendingAssignments
+          }
         />
+
         <TeacherStatCard
           title="Attendance"
           value={`${dashboard.stats.attendanceToday}%`}
         />
       </View>
 
-     <Text style={styles.heading}>
-  Quick Actions
-</Text>
+      {/* Quick Actions */}
 
-<Text>Quick Actions Disabled</Text>
+      <Text style={styles.heading}>
+        Quick Actions
+      </Text>
 
       <View style={styles.actions}>
         {dashboard.quickActions.map((item) => (
@@ -147,19 +195,33 @@ export default function TeacherDashboard() {
             onPress={() => {
               switch (item.title) {
                 case "Students":
-                  router.push("/(teacher)/students");
+                  router.push(
+                    "/(teacher)/students"
+                  );
                   break;
+
                 case "Assignments":
-                  router.push("/(teacher)/assignments");
+                  router.push(
+                    "/(teacher)/assignments"
+                  );
                   break;
+
                 case "Attendance":
-                  router.push("/(teacher)/attendance");
+                  router.push(
+                    "/(teacher)/attendance"
+                  );
                   break;
+
                 case "Schedule":
-                  router.push("/(teacher)/schedule");
+                  router.push(
+                    "/(teacher)/schedule"
+                  );
                   break;
+
                 case "AI Assistant":
-                  router.push("/(teacher)/ai");
+                  router.push(
+                    "/(teacher)/ai"
+                  );
                   break;
               }
             }}
@@ -167,7 +229,11 @@ export default function TeacherDashboard() {
         ))}
       </View>
 
-      <Text style={styles.heading}>Today's Classes</Text>
+      {/* Today's Classes */}
+
+      <Text style={styles.heading}>
+        Today's Classes
+      </Text>
 
       {dashboard.todayClasses.map((item) => (
         <TeacherClassCard
@@ -176,7 +242,11 @@ export default function TeacherDashboard() {
         />
       ))}
 
-      <Text style={styles.heading}>Recent Activity</Text>
+      {/* Recent Activity */}
+
+      <Text style={styles.heading}>
+        Recent Activity
+      </Text>
 
       {dashboard.recentActivity.map((item) => (
         <TeacherActivityCard
@@ -194,34 +264,80 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     padding: 20,
   },
+
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+
   greeting: {
     color: "#6B7280",
     fontSize: 16,
   },
+
   name: {
     fontSize: 30,
     fontWeight: "700",
     marginTop: 4,
   },
+
   subject: {
     marginTop: 4,
     color: "#64748B",
     marginBottom: 20,
   },
+
+  codeCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+    elevation: 3,
+  },
+
+  codeTitle: {
+    color: "#64748B",
+    fontSize: 15,
+  },
+
+  code: {
+    marginTop: 8,
+    fontSize: 30,
+    fontWeight: "700",
+    letterSpacing: 2,
+    color: Colors.primary,
+  },
+
+  codeButtons: {
+    flexDirection: "row",
+    marginTop: 18,
+  },
+
+  codeButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginRight: 12,
+  },
+
+  codeButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+
   heading: {
     marginTop: 22,
     marginBottom: 14,
     fontSize: 22,
     fontWeight: "700",
   },
+
   stats: {
     flexDirection: "row",
   },
+
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",

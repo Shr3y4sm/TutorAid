@@ -1,6 +1,7 @@
 export interface Teacher {
   name: string;
   subject: string;
+  teacherCode: string;
 }
 
 export interface TeacherStats {

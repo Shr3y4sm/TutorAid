@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { signIn } from "@/services/authService";
-import { getUserRole } from "@/api/auth";
+import { getAuthStatus } from "@/api/auth";
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,19 +40,33 @@ if (!data.session) {
 
 
 
-try {
-  const role = await getUserRole(
-    data.session.user.id
-  );
+const status = await getAuthStatus(
+  data.session.user.id
+);
 
-  if (role.role === "teacher") {
-    router.replace("/(teacher)/dashboard");
-  } else {
-    router.replace("/(student)/home");
-  }
-
-} catch {
+if (!status.success) {
   router.replace("/(auth)/role-selection");
+  return;
+}
+
+if (!status.role) {
+  router.replace("/(auth)/role-selection");
+  return;
+}
+
+if (!status.profileExists) {
+  if (status.role === "teacher") {
+    router.replace("/(auth)/teacher-profile");
+  } else {
+    router.replace("/(auth)/student-profile");
+  }
+  return;
+}
+
+if (status.role === "teacher") {
+  router.replace("/(teacher)/dashboard");
+} else {
+  router.replace("/(student)/home");
 }
     } finally {
       setLoading(false);

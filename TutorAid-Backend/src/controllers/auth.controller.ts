@@ -17,25 +17,41 @@ export async function registerTeacher(
       organization,
       experience,
     } = req.body;
+const { data: existingTeacher } =
+  await supabase
+    .from("teachers")
+    .select("id")
+    .eq("auth_user_id", auth_user_id)
+    .maybeSingle();
 
+if (existingTeacher) {
+  return res.status(200).json({
+    success: true,
+    data: existingTeacher,
+    alreadyExists: true,
+  });
+}
     const teacherCode =
       await generateTeacherCode(full_name);
 
     const { data, error } = await supabase
-      .from("teachers")
-      .insert({
-        auth_user_id,
-        full_name,
-        email,
-        phone,
-        subjects,
-        designation,
-        organization,
-        experience,
-        teacher_code: teacherCode,
-      })
-      .select()
-      .single();
+  .from("teachers")
+  .insert({
+    auth_user_id,
+    full_name,
+    email,
+    phone,
+    subjects,
+    designation,
+    organization,
+    experience:
+      experience === "" || experience == null
+        ? null
+        : Number(experience),
+    teacher_code: teacherCode,
+  })
+  .select()
+  .single();
 
     if (error) throw error;
 
@@ -106,6 +122,21 @@ export async function registerStudent(
       teacher_code,
     } = req.body;
 
+    const { data: existingStudent } =
+  await supabase
+    .from("students")
+    .select("id")
+    .eq("auth_user_id", auth_user_id)
+    .maybeSingle();
+
+if (existingStudent) {
+  return res.status(200).json({
+    success: true,
+    data: existingStudent,
+    alreadyExists: true,
+  });
+}
+
     const { data: teacher, error: teacherError } =
       await supabase
         .from("teachers")
@@ -131,6 +162,7 @@ export async function registerStudent(
           class: studentClass,
           parent_name,
           parent_phone,
+          teacher_code,
         })
         .select()
         .single();
@@ -189,6 +221,66 @@ export async function getUserRole(
     res.json({
       success: true,
       data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+
+export async function getAuthStatus(
+  req: Request,
+  res: Response
+) {
+  try {
+    const auth_user_id =
+      req.query.auth_user_id as string;
+
+    const { data: roleData } =
+      await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("auth_user_id", auth_user_id)
+        .maybeSingle();
+
+    if (!roleData) {
+      return res.json({
+        success: true,
+        role: null,
+        profileExists: false,
+      });
+    }
+
+    let profileExists = false;
+
+    if (roleData.role === "teacher") {
+      const { data } = await supabase
+        .from("teachers")
+        .select("id")
+        .eq("auth_user_id", auth_user_id)
+        .maybeSingle();
+
+      profileExists = !!data;
+    }
+
+    if (roleData.role === "student") {
+      const { data } = await supabase
+        .from("students")
+        .select("id")
+        .eq("auth_user_id", auth_user_id)
+        .maybeSingle();
+
+      profileExists = !!data;
+    }
+
+    res.json({
+      success: true,
+      role: roleData.role,
+      profileExists,
     });
 
   } catch (err: any) {

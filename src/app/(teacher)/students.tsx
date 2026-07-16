@@ -13,7 +13,8 @@ import { useFocusEffect } from "expo-router";
 import Colors from "@/theme/colors";
 
 import { getTeacherStudents } from "@/api/teacherStudents";
-
+import { Alert } from "react-native";
+import { deleteStudent } from "@/api/teacherStudents";
 import StudentCard from "@/features/teacher/students/components/StudentCard";
 import { getCurrentTeacherId } from "@/services/teacherService";
 import { TeacherStudent } from "@/features/teacher/students/types/student";
@@ -85,7 +86,47 @@ export default function StudentsScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <StudentCard student={item} />
+          <StudentCard
+  student={item}
+  onView={() =>
+    router.push({
+      pathname:
+        "/(teacher)/student-details",
+      params: {
+        id: item.id,
+      },
+    })
+  }
+  onEdit={() =>
+    router.push({
+      pathname:
+        "/(teacher)/edit-student",
+      params: {
+        id: item.id,
+      },
+    })
+  }
+  onDelete={() =>
+  Alert.alert(
+    "Delete Student",
+    `Delete ${item.full_name}?`,
+    [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteStudent(item.id);
+          loadStudents();
+        },
+      },
+    ]
+  )
+}
+/>
         )}
       />
 

@@ -1,10 +1,11 @@
 import { Router } from "express";
 
 import {
-    registerStudent,
+  registerStudent,
   registerTeacher,
   searchTeacher,
-  getUserRole
+  getUserRole,
+  getAuthStatus,
 } from "../controllers/auth.controller";
 
 const router = Router();
@@ -16,5 +17,5 @@ router.get(
   searchTeacher
 );
 router.get("/role", getUserRole);
-
+router.get("/status", getAuthStatus);
 export default router;
