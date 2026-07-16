@@ -21,16 +21,18 @@ interface SingleCourseResponse {
 
 export async function getCourses(
   studentId: string
-) {
+): Promise<Course[]> {
   const response =
     await api<CourseResponse>(
       `/courses?studentId=${studentId}`
     );
 
-  return response.data;
+  return response.data ?? [];
 }
 
-export async function getCourse(id: string) {
+export async function getCourse(
+  id: string
+): Promise<Course> {
   const response =
     await api<SingleCourseResponse>(
       `/courses/${id}`

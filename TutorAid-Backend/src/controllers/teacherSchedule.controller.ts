@@ -51,25 +51,49 @@ export async function createSchedule(
     } = req.body;
 
     const { data, error } = await supabase
-      .from("schedule")
-      .insert({
-        teacher_id,
-        subject,
-        section,
-        room,
-        start_time,
-        end_time,
-        day,
-      })
-      .select()
-      .single();
+  .from("schedule")
+  .insert({
+    teacher_id,
+    subject,
+    section,
+    room,
+    start_time,
+    end_time,
+    day,
+  })
+  .select()
+  .single();
 
-    if (error) throw error;
+if (error) throw error;
 
-    res.status(201).json({
-      success: true,
-      data,
-    });
+// INSERT THE NOTIFICATION CODE HERE
+
+const { data: students } =
+  await supabase
+    .from("teacher_students")
+    .select("student_id")
+    .eq("teacher_id", teacher_id);
+
+if (students?.length) {
+  const notifications = students.map(
+    (student: any) => ({
+      student_id: student.student_id,
+      teacher_id,
+      title: "New Class Scheduled",
+      message: `${subject} has been scheduled on ${day} at ${start_time}.`,
+      type: "schedule",
+    })
+  );
+
+  await supabase
+    .from("notifications")
+    .insert(notifications);
+}
+
+res.status(201).json({
+  success: true,
+  data,
+});
 
   } catch (err: any) {
     res.status(500).json({
@@ -78,6 +102,7 @@ export async function createSchedule(
     });
   }
 }
+
 
 export async function updateSchedule(
   req: Request,

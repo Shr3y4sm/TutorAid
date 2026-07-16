@@ -1,7 +1,7 @@
 export interface TeacherAttendance {
-  id: number;
-  rollNo: string;
+  id: string;
   name: string;
+  rollNo: string;
   present: boolean;
 }
 

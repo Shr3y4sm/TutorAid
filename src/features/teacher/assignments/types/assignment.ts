@@ -25,18 +25,13 @@ export interface TeacherAssignmentsResponse {
 
 export interface TeacherAssignmentCreate {
   teacher_id: string;
-
   title: string;
-
   description: string;
-
   subject: string;
-
   due_date: string;
-
   max_marks: number;
-
   students: string[];
+  file_url?: string;
 }
 export interface TeacherAssignmentUpdate {
   title: string;

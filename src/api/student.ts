@@ -11,6 +11,21 @@ export interface StudentDashboardResponse {
   };
 }
 
+export interface StudentSchedule {
+  id: string;
+  subject: string;
+  section: string;
+  room: string;
+  day: string;
+  start_time: string;
+  end_time: string;
+  teacher_id: string;
+  teachers?: {
+    full_name: string;
+  };
+  call_id?: string | null;
+}
+
 export async function getStudentDashboard(
   studentId: string
 ) {
@@ -20,4 +35,17 @@ export async function getStudentDashboard(
     );
 
   return response.data;
+}
+
+export async function getStudentSchedule(
+  studentId: string
+): Promise<StudentSchedule[]> {
+  const response = await api<{
+    success: boolean;
+    data: StudentSchedule[];
+  }>(
+    `/student/schedule?studentId=${studentId}`
+  );
+
+  return response.data ?? [];
 }

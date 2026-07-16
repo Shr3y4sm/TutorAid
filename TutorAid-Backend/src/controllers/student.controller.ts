@@ -6,7 +6,8 @@ export async function getDashboard(
   res: Response
 ) {
   try {
-    const studentId = req.query.studentId as string;
+    const studentId =
+      req.query.studentId as string;
 
     if (!studentId) {
       return res.status(400).json({
@@ -15,7 +16,6 @@ export async function getDashboard(
       });
     }
 
-    // Student
     const { data: student, error: studentError } =
       await supabase
         .from("students")
@@ -23,41 +23,52 @@ export async function getDashboard(
         .eq("id", studentId)
         .single();
 
-    if (studentError) {
-      return res.status(500).json({
-        success: false,
-        message: studentError.message,
-      });
-    }
+    if (studentError) throw studentError;
 
-    // Attendance
     const { data: attendance } =
       await supabase
         .from("attendance")
         .select("present")
         .eq("student_id", studentId);
 
-    const total = attendance?.length ?? 0;
+    const total =
+      attendance?.length ?? 0;
 
     const present =
-      attendance?.filter((a) => a.present).length ?? 0;
+      attendance?.filter(
+        (a: any) => a.present
+      ).length ?? 0;
 
     const attendancePercentage =
       total === 0
         ? 0
-        : Math.round((present / total) * 100);
+        : Math.round(
+            (present / total) * 100
+          );
 
-    // Today's classes
-    const { data: classes } =
+    const { data: teacherLink } =
       await supabase
-        .from("schedule")
-        .select("*")
-        .eq("teacher_id", student.teacher_id)
-        .order("start_time", {
-  ascending: true,
-});
+        .from("teacher_students")
+        .select("teacher_id")
+        .eq("student_id", studentId)
+        .maybeSingle();
 
-    // Announcements
+    let todaysClasses: any[] = [];
+
+    if (teacherLink?.teacher_id) {
+      const { data: classes } =
+        await supabase
+          .from("schedule")
+          .select("*")
+          .eq(
+            "teacher_id",
+            teacherLink.teacher_id
+          )
+          .order("start_time");
+
+      todaysClasses = classes ?? [];
+    }
+
     const { data: announcements } =
       await supabase
         .from("announcements")
@@ -66,19 +77,24 @@ export async function getDashboard(
           ascending: false,
         });
 
-    return res.json({
+    res.json({
       success: true,
       data: {
         student,
-        attendance: attendancePercentage,
-        todaysClasses: classes ?? [],
-        announcements: announcements ?? [],
+        attendance:
+          attendancePercentage,
+        todaysClasses,
+        announcements:
+          announcements ?? [],
       },
     });
-  } catch (err) {
-    return res.status(500).json({
+
+  } catch (err: any) {
+    res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message:
+        err.message ??
+        "Internal Server Error",
     });
   }
 }
@@ -88,7 +104,8 @@ export async function getProfile(
   res: Response
 ) {
   try {
-    const studentId = req.query.studentId as string;
+    const studentId =
+      req.query.studentId as string;
 
     const { data, error } =
       await supabase
@@ -97,21 +114,77 @@ export async function getProfile(
         .eq("id", studentId)
         .single();
 
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+    if (error) throw error;
 
     res.json({
       success: true,
       data,
     });
-  } catch {
+
+  } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message:
+        err.message ??
+        "Internal Server Error",
+    });
+  }
+}
+
+export async function getStudentSchedule(
+  req: Request,
+  res: Response
+) {
+  try {
+    const studentId =
+      req.query.studentId as string;
+
+    const { data: teacherLink, error: linkError } =
+      await supabase
+        .from("teacher_students")
+        .select("teacher_id")
+        .eq("student_id", studentId)
+        .maybeSingle();
+
+    if (linkError) throw linkError;
+
+    if (!teacherLink) {
+      return res.json({
+        success: true,
+        data: [],
+      });
+    }
+
+    const { data, error } =
+      await supabase
+        .from("schedule")
+        .select(`
+          *,
+          teachers(
+            full_name
+          )
+        `)
+        .eq(
+          "teacher_id",
+          teacherLink.teacher_id
+        )
+        .order("day")
+        .order("start_time");
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data ?? [],
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message:
+        err.message ??
+        "Internal Server Error",
+      data: [],
     });
   }
 }

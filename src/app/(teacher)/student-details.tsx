@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
 } from "react-native";
@@ -16,16 +18,36 @@ export default function StudentDetailsScreen() {
   const [student, setStudent] =
     useState<TeacherStudent | null>(null);
 
+  const [loading, setLoading] =
+    useState(true);
+
   useEffect(() => {
-    load();
-  }, []);
+    if (id) {
+      load();
+    }
+  }, [id]);
 
   async function load() {
-    const data = await getStudent(id as string);
-    setStudent(data);
+    try {
+      const data = await getStudent(
+        String(id)
+      );
+
+      setStudent(data);
+    } catch (err: any) {
+      console.log(err);
+
+      Alert.alert(
+        "Error",
+        err?.message ??
+          "Unable to load student."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
-  if (!student) {
+  if (loading) {
     return (
       <SafeAreaView style={styles.center}>
         <ActivityIndicator size="large" />
@@ -33,23 +55,67 @@ export default function StudentDetailsScreen() {
     );
   }
 
+  if (!student) {
+    return (
+      <SafeAreaView style={styles.center}>
+        <Text>
+          Student not found.
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.name}>
-        {student.full_name}
-      </Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.name}>
+          {student.full_name}
+        </Text>
 
-      <Text>Class : {student.class}</Text>
+        <Text style={styles.label}>
+          Class
+        </Text>
+        <Text style={styles.value}>
+          {student.class ?? "-"}
+        </Text>
 
-      <Text>Roll No : {student.roll_no}</Text>
+        <Text style={styles.label}>
+          Roll Number
+        </Text>
+        <Text style={styles.value}>
+          {student.roll_no ?? "-"}
+        </Text>
 
-      <Text>Email : {student.email}</Text>
+        <Text style={styles.label}>
+          Email
+        </Text>
+        <Text style={styles.value}>
+          {student.email ?? "-"}
+        </Text>
 
-      <Text>Phone : {student.phone}</Text>
+        <Text style={styles.label}>
+          Phone
+        </Text>
+        <Text style={styles.value}>
+          {student.phone ?? "-"}
+        </Text>
 
-      <Text>Parent : {student.parent_name}</Text>
+        <Text style={styles.label}>
+          Parent
+        </Text>
+        <Text style={styles.value}>
+          {student.parent_name ?? "-"}
+        </Text>
 
-      <Text>Parent Phone : {student.parent_phone}</Text>
+        <Text style={styles.label}>
+          Parent Phone
+        </Text>
+        <Text style={styles.value}>
+          {student.parent_phone ?? "-"}
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -58,6 +124,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#F8FAFC",
   },
 
   center: {
@@ -69,6 +136,19 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 30,
     fontWeight: "700",
-    marginBottom: 20,
+    marginBottom: 24,
+    color: "#111827",
+  },
+
+  label: {
+    marginTop: 16,
+    fontWeight: "700",
+    color: "#64748B",
+  },
+
+  value: {
+    marginTop: 6,
+    fontSize: 17,
+    color: "#111827",
   },
 });

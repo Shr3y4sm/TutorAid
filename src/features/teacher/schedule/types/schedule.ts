@@ -9,6 +9,8 @@ export interface TeacherSchedule {
 
   room: string;
 
+  day: string;
+
   start_time: string;
 
   end_time: string;

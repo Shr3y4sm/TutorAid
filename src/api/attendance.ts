@@ -1,13 +1,14 @@
 import { api } from "./client";
-import { AttendanceResponse } from "@/features/attendance/types/attendance";
+
+import { AttendanceData } from "@/features/attendance/types/attendance";
 
 export async function getAttendance(
   studentId: string
-) {
-  const response =
-    await api<AttendanceResponse>(
-      `/attendance?studentId=${studentId}`
-    );
+): Promise<AttendanceData> {
+  const response = await api<{
+    success: boolean;
+    data: AttendanceData;
+  }>(`/attendance?studentId=${studentId}`);
 
   return response.data;
 }

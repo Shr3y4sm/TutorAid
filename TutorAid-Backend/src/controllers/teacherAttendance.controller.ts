@@ -9,48 +9,36 @@ export async function getTeacherAttendance(
     const teacherId = req.query.teacherId as string;
 
     const { data, error } = await supabase
-      .from("attendance")
+      .from("teacher_students")
       .select(`
-        id,
-        present,
-        class_date,
-        student:students!attendance_student_id_fkey(
+        student:students(
           id,
           full_name,
-          roll_no,
-          teacher_id
+          roll_no
         )
-      `);
+      `)
+      .eq("teacher_id", teacherId);
 
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+    if (error) throw error;
 
-    const result = data
-      .filter(
-        (row: any) =>
-          row.student &&
-          row.student.teacher_id === teacherId
-      )
-      .map((row: any) => ({
-        id: row.id,
-        student_id: row.student.id,
+    const students = (data ?? []).map(
+      (row: any) => ({
+        id: row.student.id,
         name: row.student.full_name,
-        rollNo: row.student.roll_no,
-        present: row.present,
-      }));
+        rollNo: row.student.roll_no ?? "-",
+        present: false,
+      })
+    );
 
     res.json({
       success: true,
-      data: result,
+      data: students,
     });
-  } catch (err) {
+
+  } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: err.message,
     });
   }
 }
@@ -60,28 +48,125 @@ export async function markAttendance(
   res: Response
 ) {
   try {
-    const { id, present } = req.body;
+    const {
+      id,
+      present,
+    } = req.body;
 
-    const { error } = await supabase
-      .from("attendance")
-      .update({
-        present,
-      })
-      .eq("id", id);
+    const today =
+      new Date().toISOString().split("T")[0];
 
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
+    const { data: existing } =
+      await supabase
+        .from("attendance")
+        .select("id")
+        .eq("student_id", id)
+        .eq("class_date", today)
+        .maybeSingle();
+
+    if (existing) {
+      const { data, error } =
+        await supabase
+          .from("attendance")
+          .update({
+            present,
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+
+      if (error) throw error;
+
+      return res.json({
+        success: true,
+        data,
       });
     }
+
+    const { data, error } =
+      await supabase
+        .from("attendance")
+        .insert({
+          student_id: id,
+          class_date: today,
+          present,
+          marked_by:
+            req.body.marked_by,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    res.status(201).json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function updateAttendance(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+    const { present } = req.body;
+
+    const { data, error } =
+      await supabase
+        .from("attendance")
+        .update({
+          present,
+        })
+        .eq("id", id)
+        .select()
+        .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+}
+
+export async function deleteAttendance(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const { error } =
+      await supabase
+        .from("attendance")
+        .delete()
+        .eq("id", id);
+
+    if (error) throw error;
 
     res.json({
       success: true,
     });
-  } catch {
+
+  } catch (err: any) {
     res.status(500).json({
       success: false,
+      message: err.message,
     });
   }
 }

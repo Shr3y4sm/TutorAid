@@ -112,33 +112,6 @@ export default function TeacherDashboard() {
       <Text style={styles.subject}>
         {dashboard.teacher.subject}
       </Text>
-<View style={styles.codeCard}>
-  <Text style={styles.codeTitle}>
-    Teacher Code
-  </Text>
-
-  <Text style={styles.code}>
-    {dashboard.teacher.teacherCode}
-  </Text>
-
-  <TouchableOpacity
-  style={styles.codeButton}
-  onPress={async () => {
-    await Clipboard.setStringAsync(
-      dashboard.teacher.teacherCode
-    );
-
-    Alert.alert(
-      "Copied",
-      "Teacher code copied."
-    );
-  }}
->
-  <Text style={styles.codeButtonText}>
-    Copy
-  </Text>
-</TouchableOpacity>
-</View>
       {/* Teacher Code */}
 
       <View style={styles.codeCard}>

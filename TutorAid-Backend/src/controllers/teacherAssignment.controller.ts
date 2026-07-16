@@ -44,6 +44,7 @@ export async function createAssignment(
       due_date,
       max_marks,
       students,
+      file_url,
     } = req.body;
 
     const { data: assignment, error } =
@@ -56,6 +57,7 @@ export async function createAssignment(
           subject,
           due_date,
           max_marks,
+          file_url,
           status: "Active",
         })
         .select()
@@ -64,19 +66,52 @@ export async function createAssignment(
     if (error) throw error;
 
     if (students?.length) {
-      const links = students.map(
-        (studentId: string) => ({
-          assignment_id: assignment.id,
-          student_id: studentId,
-        })
-      );
+      const assignmentLinks =
+        students.map(
+          (studentId: string) => ({
+            assignment_id:
+              assignment.id,
+            student_id:
+              studentId,
+          })
+        );
 
-      const { error: linkError } =
-        await supabase
-          .from("assignment_students")
-          .insert(links);
+      const {
+        error: assignmentError,
+      } = await supabase
+        .from(
+          "assignment_students"
+        )
+        .insert(
+          assignmentLinks
+        );
 
-      if (linkError) throw linkError;
+      if (assignmentError)
+        throw assignmentError;
+
+      const notifications =
+        students.map(
+          (studentId: string) => ({
+            student_id:
+              studentId,
+            teacher_id,
+            title:
+              "New Assignment",
+            message: `${title} has been assigned.`,
+            type: "assignment",
+          })
+        );
+
+      const {
+        error: notificationError,
+      } = await supabase
+        .from("notifications")
+        .insert(
+          notifications
+        );
+
+      if (notificationError)
+        throw notificationError;
     }
 
     res.status(201).json({
@@ -87,7 +122,9 @@ export async function createAssignment(
   } catch (err: any) {
     res.status(500).json({
       success: false,
-      message: err.message,
+      message:
+        err.message ??
+        "Unable to create assignment.",
     });
   }
 }

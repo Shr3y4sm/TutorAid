@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
   View,
+  Text,
 } from "react-native";
 
 import CourseCard from "@/features/courses/components/CourseCard";
@@ -12,6 +13,7 @@ import {
   getCourses,
 } from "@/api/courses";
 import { getCurrentStudentId } from "@/services/studentService";
+
 export default function CoursesScreen() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,25 +23,36 @@ export default function CoursesScreen() {
   }, []);
 
   async function loadCourses() {
-  try {
-    const studentId =
-      await getCurrentStudentId();
+    try {
+      const studentId =
+        await getCurrentStudentId();
 
-    const data =
-      await getCourses(studentId);
+      const data =
+        await getCourses(studentId);
 
-    setCourses(data);
-  } catch (error) {
-    console.log(error);
-  } finally {
-    setLoading(false);
+      setCourses(data ?? []);
+    } catch (err) {
+      console.log(err);
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   if (loading) {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (courses.length === 0) {
+    return (
+      <View style={styles.loader}>
+        <Text style={styles.empty}>
+          No courses enrolled yet.
+        </Text>
       </View>
     );
   }
@@ -70,5 +83,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  empty: {
+    fontSize: 16,
+    color: "#64748B",
   },
 });

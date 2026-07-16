@@ -16,7 +16,21 @@ import { getTeacherStudents } from "@/api/teacherStudents";
 import { createAssignment } from "@/api/teacherAssignments";
 
 import { TeacherStudent } from "@/features/teacher/students/types/student";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 
+import supabase from "@/config/supabase";
+
+const [maxMarks, setMaxMarks] = useState("100");
+
+const [selectedFile, setSelectedFile] =
+  useState<DocumentPicker.DocumentPickerAsset | null>(null);
+
+const [uploading, setUploading] =
+  useState(false);
+
+const [fileUrl, setFileUrl] =
+  useState("");
 export default function AddAssignmentScreen() {
   const [teacherId, setTeacherId] = useState("");
 
@@ -65,50 +79,126 @@ export default function AddAssignmentScreen() {
       ]);
     }
   }
+async function pickFile() {
+  const result =
+    await DocumentPicker.getDocumentAsync({
+      multiple: false,
+      type: [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "image/*",
+      ],
+    });
 
+  if (result.canceled) return;
+
+  setSelectedFile(result.assets[0]);
+}
+
+async function uploadAssignmentFile() {
+  if (!selectedFile) return "";
+
+  try {
+    setUploading(true);
+
+    const base64 =
+      await FileSystem.readAsStringAsync(
+        selectedFile.uri,
+        {
+          encoding:
+            FileSystem.EncodingType.Base64,
+        }
+      );
+
+    const bytes = Uint8Array.from(
+      atob(base64),
+      (c) => c.charCodeAt(0)
+    );
+
+    const extension =
+      selectedFile.name.split(".").pop();
+
+    const filename =
+      `${Date.now()}.${extension}`;
+
+    const { error } =
+      await supabase.storage
+        .from("assignment-files")
+        .upload(filename, bytes, {
+          contentType:
+            selectedFile.mimeType,
+          upsert: false,
+        });
+
+    if (error) throw error;
+
+    const { data } =
+      supabase.storage
+        .from("assignment-files")
+        .getPublicUrl(filename);
+
+    setFileUrl(data.publicUrl);
+
+    return data.publicUrl;
+
+  } finally {
+    setUploading(false);
+  }
+}
   async function saveAssignment() {
-    if (!title.trim()) {
-      Alert.alert("Enter assignment title.");
-      return;
-    }
-
-    if (!subject.trim()) {
-      Alert.alert("Enter subject.");
-      return;
-    }
-
-    if (selectedStudents.length === 0) {
-      Alert.alert("Select at least one student.");
-      return;
-    }
-
-    try {
-      await createAssignment({
-        teacher_id: teacherId,
-        title,
-        description,
-        subject,
-        due_date: dueDate,
-        max_marks: Number(maxMarks),
-        students: selectedStudents,
-      });
-
-      Alert.alert(
-        "Success",
-        "Assignment created successfully."
-      );
-
-      router.back();
-    } catch (err) {
-      console.log(err);
-
-      Alert.alert(
-        "Error",
-        "Failed to create assignment."
-      );
-    }
+  if (!title.trim()) {
+    Alert.alert("Enter assignment title.");
+    return;
   }
 
+  if (!subject.trim()) {
+    Alert.alert("Enter subject.");
+    return;
+  }
+
+  if (selectedStudents.length === 0) {
+    Alert.alert("Select at least one student.");
+    return;
+  }
+
+  try {
+    let uploadedFileUrl = "";
+
+    if (selectedFile) {
+      uploadedFileUrl =
+        await uploadAssignmentFile();
+    }
+
+    await createAssignment({
+      teacher_id: teacherId,
+      title,
+      description,
+      subject,
+      due_date: dueDate,
+      max_marks: Number(maxMarks),
+      students: selectedStudents,
+      file_url: uploadedFileUrl,
+    });
+
+    Alert.alert(
+      "Success",
+      "Assignment published successfully."
+    );
+
+    router.back();
+
+  } catch (err) {
+    console.log(err);
+
+    Alert.alert(
+      "Error",
+      "Unable to publish assignment."
+    );
+  }
+}
   return (
     <ScrollView
       style={styles.container}
@@ -158,7 +248,22 @@ export default function AddAssignmentScreen() {
       <Text style={styles.heading}>
         Select Students
       </Text>
+<TouchableOpacity
+  style={styles.fileButton}
+  onPress={pickFile}
+>
+  <Text style={styles.fileButtonText}>
+    {selectedFile
+      ? `📎 ${selectedFile.name}`
+      : "📄 Attach Assignment File"}
+  </Text>
+</TouchableOpacity>
 
+{uploading && (
+  <Text style={styles.uploading}>
+    Uploading file...
+  </Text>
+)}
       <FlatList
         data={students}
         scrollEnabled={false}
@@ -209,6 +314,28 @@ export default function AddAssignmentScreen() {
 }
 
 const styles = StyleSheet.create({
+  fileButton: {
+  backgroundColor: "#EEF2FF",
+  borderRadius: 12,
+  padding: 14,
+  marginBottom: 18,
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: "#2563EB",
+},
+
+fileButtonText: {
+  color: "#2563EB",
+  fontWeight: "700",
+  fontSize: 15,
+},
+
+uploading: {
+  textAlign: "center",
+  marginBottom: 14,
+  color: "#2563EB",
+  fontWeight: "600",
+},
   container: {
     flex: 1,
     backgroundColor: "#F5F7FB",

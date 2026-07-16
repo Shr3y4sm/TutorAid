@@ -4,185 +4,85 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from "react-native";
-import {
-  router,
-  useLocalSearchParams,
-} from "expo-router";
+import { router } from "expo-router";
 
 import Colors from "@/theme/colors";
-import { deleteSchedule } from "@/api/teacherSchedule";
+import { TeacherSchedule } from "../types/schedule";
 
-export default function ScheduleDetailsScreen() {
-  const params = useLocalSearchParams();
+interface Props {
+  schedule: TeacherSchedule;
+}
 
-  function removeSchedule() {
-    Alert.alert(
-      "Delete Schedule",
-      "Are you sure you want to delete this schedule?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteSchedule(
-                String(params.id)
-              );
-
-              Alert.alert(
-                "Deleted",
-                "Schedule deleted successfully."
-              );
-
-              router.replace(
-                "/(teacher)/schedule"
-              );
-
-            } catch (err) {
-              console.log(err);
-
-              Alert.alert(
-                "Error",
-                "Unable to delete schedule."
-              );
-            }
-          },
-        },
-      ]
-    );
-  }
-
+export default function ScheduleCard({
+  schedule,
+}: Props) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Schedule Details
-      </Text>
-
-      <Text style={styles.label}>
-        Subject
-      </Text>
-
-      <Text style={styles.value}>
-        {params.subject}
-      </Text>
-
-      <Text style={styles.label}>
-        Section
-      </Text>
-
-      <Text style={styles.value}>
-        {params.section}
-      </Text>
-
-      <Text style={styles.label}>
-        Room
-      </Text>
-
-      <Text style={styles.value}>
-        {params.room}
-      </Text>
-
-      <Text style={styles.label}>
-        Day
-      </Text>
-
-      <Text style={styles.value}>
-        {params.day}
-      </Text>
-
-      <Text style={styles.label}>
-        Start Time
-      </Text>
-
-      <Text style={styles.value}>
-        {params.start_time}
-      </Text>
-
-      <Text style={styles.label}>
-        End Time
-      </Text>
-
-      <Text style={styles.value}>
-        {params.end_time}
-      </Text>
-
-      <TouchableOpacity
-        style={styles.editButton}
-        onPress={() =>
-          router.push({
-            pathname:
-              "/(teacher)/edit-schedule",
-            params,
-          })
-        }
-      >
-        <Text style={styles.buttonText}>
-          Edit Schedule
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() =>
+        router.push({
+          pathname: "/(teacher)/schedule-details",
+          params: {
+            id: String(schedule.id),
+            subject: schedule.subject,
+            section: schedule.section,
+            room: schedule.room,
+            day: schedule.day,
+            start_time: schedule.start_time,
+            end_time: schedule.end_time,
+          },
+        })
+      }
+    >
+      <View style={styles.card}>
+        <Text style={styles.subject}>
+          {schedule.subject}
         </Text>
-      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={removeSchedule}
-      >
-        <Text style={styles.buttonText}>
-          Delete Schedule
+        <Text style={styles.info}>
+          Section: {schedule.section}
         </Text>
-      </TouchableOpacity>
-    </View>
+
+        <Text style={styles.info}>
+          Room: {schedule.room}
+        </Text>
+
+        <Text style={styles.info}>
+          Day: {schedule.day}
+        </Text>
+
+        <Text style={styles.time}>
+          {schedule.start_time} - {schedule.end_time}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    padding: 20,
-  },
-
-  title: {
-    fontSize: 30,
-    fontWeight: "700",
-    marginBottom: 24,
-  },
-
-  label: {
-    marginTop: 16,
-    color: "#64748B",
-    fontWeight: "700",
-  },
-
-  value: {
-    marginTop: 6,
-    fontSize: 17,
-    color: "#111827",
-  },
-
-  editButton: {
-    marginTop: 40,
-    backgroundColor: Colors.primary,
+  card: {
+    backgroundColor: Colors.surface,
     padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
+    borderRadius: 14,
+    marginBottom: 14,
   },
 
-  deleteButton: {
-    marginTop: 16,
-    backgroundColor: "#EF4444",
-    padding: 16,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+  subject: {
+    fontSize: 19,
     fontWeight: "700",
+    color: Colors.text,
+    marginBottom: 8,
+  },
+
+  info: {
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+
+  time: {
+    marginTop: 10,
+    fontWeight: "700",
+    color: Colors.primary,
   },
 });

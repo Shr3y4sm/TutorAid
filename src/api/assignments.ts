@@ -11,5 +11,5 @@ export async function getAssignments(
     `/assignments?studentId=${studentId}`
   );
 
-  return response.data;
+  return response.data ?? [];
 }
