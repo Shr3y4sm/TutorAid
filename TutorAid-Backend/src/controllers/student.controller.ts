@@ -188,3 +188,149 @@ export async function getStudentSchedule(
     });
   }
 }
+
+
+export async function getStudentAssignments(
+  req: Request,
+  res: Response
+) {
+  try {
+    const studentId = req.query.studentId as string;
+
+    if (!studentId) {
+      return res.status(400).json({
+        success: false,
+        message: "studentId is required",
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("assignment_students")
+      .select(`
+        id,
+        status,
+        marks,
+        feedback,
+        submitted_at,
+        assignment:assignments(
+          id,
+          teacher_id,
+          title,
+          description,
+          subject,
+          due_date,
+          max_marks,
+          status,
+          file_url,
+          created_at
+        )
+      `)
+      .eq("student_id", studentId)
+      .order("created_at", {
+        foreignTable: "assignments",
+        ascending: false,
+      });
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data ?? [],
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+      data: [],
+    });
+  }
+}
+
+
+export async function getStudentAssignment(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from("assignments")
+      .select(`
+        *,
+        teachers(
+          full_name
+        )
+      `)
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data,
+    });
+
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message:
+        err.message ??
+        "Unable to load assignment.",
+    });
+  }
+}
+
+export async function submitAssignment(
+    req: Request,
+    res: Response
+) {
+    try {
+
+        const { id } = req.params;
+
+        const {
+            student_id,
+            file_url,
+            remarks
+        } = req.body;
+
+        const { error: submitError } =
+            await supabase
+                .from("assignment_submissions")
+                .upsert({
+                    assignment_id: id,
+                    student_id,
+                    file_url,
+                    remarks
+                });
+
+        if (submitError) throw submitError;
+
+        const { error: statusError } =
+            await supabase
+                .from("assignment_students")
+                .update({
+                    status: "Submitted",
+                    submitted_at: new Date()
+                })
+                .eq("assignment_id", id)
+                .eq("student_id", student_id);
+
+        if (statusError) throw statusError;
+
+        res.json({
+            success: true
+        });
+
+    } catch (err: any) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+}
