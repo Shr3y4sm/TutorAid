@@ -1,28 +1,82 @@
+# ==========================
 # Dependencies
+# ==========================
 node_modules/
-# Expo & build artifacts
-.expo/
-web-build/
-# Local environment and secret files
+**/node_modules/
+
+# ==========================
+# Environment
+# ==========================
 .env
-.env.*            # e.g. .env.local, .env.production
-# iOS/Android build directories
-android/
-ios/
-# IDE/editor settings
+.env.*
+!.env.example
+
+# ==========================
+# Expo
+# ==========================
+.expo/
+.expo-shared/
+web-build/
+dist/
+
+# ==========================
+# React Native
+# ==========================
+*.apk
+*.aab
+
+# ==========================
+# Build
+# ==========================
+build/
+coverage/
+.tmp/
+temp/
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ==========================
+# IDE
+# ==========================
 .vscode/
 .idea/
-*.xcworkspace
-# macOS system files
+
+# ==========================
+# macOS
+# ==========================
 .DS_Store
-# Logs and misc
-npm-debug.log*
-yarn-error.log*
-# Expo shell apps
-android-shell-app
-shellAppBase-*
-shellAppIntermediates/
-# Firebase service files (if any)
+
+# ==========================
+# Windows
+# ==========================
+Thumbs.db
+
+# ==========================
+# Secrets
+# ==========================
 google-services.json
 GoogleService-Info.plist
-# Misc: CI/CD etc
+
+# ==========================
+# Local database
+# ==========================
+*.sqlite
+*.db
+
+# ==========================
+# Cache
+# ==========================
+.cache/
+.parcel-cache/
+
+# ==========================
+# Typescript
+# ==========================
+*.tsbuildinfo
