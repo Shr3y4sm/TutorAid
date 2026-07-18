@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { randomUUID } from "crypto";
 import supabase from "../config/supabase";
 
 export async function getTeacherAssignments(
@@ -128,6 +129,63 @@ export async function createAssignment(
     });
   }
 }
+
+export async function uploadAssignmentFile(
+  req: Request,
+  res: Response
+) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded.",
+      });
+    }
+
+    const extension =
+      req.file.originalname.split(".").pop();
+
+    const filename =
+      `${randomUUID()}.${extension}`;
+
+    const { error } =
+      await supabase.storage
+        .from("assignment-files")
+        .upload(
+          filename,
+          req.file.buffer,
+          {
+            contentType:
+              req.file.mimetype,
+            upsert: false,
+          }
+        );
+
+    if (error) throw error;
+
+    const { data } =
+      supabase.storage
+        .from("assignment-files")
+        .getPublicUrl(filename);
+
+    return res.json({
+      success: true,
+      file_url: data.publicUrl,
+    });
+
+  } catch (err: any) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        err.message ??
+        "Upload failed.",
+    });
+  }
+}
+
+
 export async function updateAssignment(
   req: Request,
   res: Response

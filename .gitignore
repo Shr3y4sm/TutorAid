@@ -46,3 +46,4 @@ node_modules
 dist
 
 TutorAid-Backend/.env
+TutorAid\TutorAid-Backend\.env

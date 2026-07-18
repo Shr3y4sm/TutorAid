@@ -17,20 +17,11 @@ import { createAssignment } from "@/api/teacherAssignments";
 
 import { TeacherStudent } from "@/features/teacher/students/types/student";
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
+//import * as FileSystem from "expo-file-system/legacy";
 
-import supabase from "@/config/supabase";
+//import supabase from "@/config/supabase";
 
-const [maxMarks, setMaxMarks] = useState("100");
 
-const [selectedFile, setSelectedFile] =
-  useState<DocumentPicker.DocumentPickerAsset | null>(null);
-
-const [uploading, setUploading] =
-  useState(false);
-
-const [fileUrl, setFileUrl] =
-  useState("");
 export default function AddAssignmentScreen() {
   const [teacherId, setTeacherId] = useState("");
 
@@ -47,6 +38,14 @@ export default function AddAssignmentScreen() {
   const [dueDate, setDueDate] = useState("");
 
   const [maxMarks, setMaxMarks] = useState("100");
+  const [selectedFile, setSelectedFile] =
+  useState<DocumentPicker.DocumentPickerAsset | null>(null);
+
+const [uploading, setUploading] =
+  useState(false);
+
+const [fileUrl, setFileUrl] =
+  useState("");
 
   useEffect(() => {
     loadStudents();
@@ -104,45 +103,34 @@ async function uploadAssignmentFile() {
   try {
     setUploading(true);
 
-    const base64 =
-      await FileSystem.readAsStringAsync(
-        selectedFile.uri,
-        {
-          encoding:
-            FileSystem.EncodingType.Base64,
-        }
-      );
+    const formData = new FormData();
 
-    const bytes = Uint8Array.from(
-      atob(base64),
-      (c) => c.charCodeAt(0)
+    formData.append("file", {
+      uri: selectedFile.uri,
+      name: selectedFile.name,
+      type:
+        selectedFile.mimeType ??
+        "application/octet-stream",
+    } as any);
+
+    const response = await fetch(
+      "http://172.23.226.132:3000/teacher/assignments/upload",
+      {
+        method: "POST",
+        body: formData,
+      }
     );
 
-    const extension =
-      selectedFile.name.split(".").pop();
+    const json = await response.json();
 
-    const filename =
-      `${Date.now()}.${extension}`;
+    if (!response.ok || !json.success) {
+      console.error(json);
+      throw new Error(
+        json.message ?? "Upload failed"
+      );
+    }
 
-    const { error } =
-      await supabase.storage
-        .from("assignment-files")
-        .upload(filename, bytes, {
-          contentType:
-            selectedFile.mimeType,
-          upsert: false,
-        });
-
-    if (error) throw error;
-
-    const { data } =
-      supabase.storage
-        .from("assignment-files")
-        .getPublicUrl(filename);
-
-    setFileUrl(data.publicUrl);
-
-    return data.publicUrl;
+    return json.file_url;
 
   } finally {
     setUploading(false);
@@ -190,14 +178,15 @@ async function uploadAssignmentFile() {
 
     router.back();
 
-  } catch (err) {
-    console.log(err);
+  } catch (err: any) {
+  console.error(err);
 
-    Alert.alert(
-      "Error",
+  Alert.alert(
+    "Error",
+    err?.message ??
       "Unable to publish assignment."
-    );
-  }
+  );
+}
 }
   return (
     <ScrollView
