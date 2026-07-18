@@ -1,82 +1,65 @@
-# ==========================
 # Dependencies
-# ==========================
 node_modules/
 **/node_modules/
 
-# ==========================
 # Environment
-# ==========================
 .env
 .env.*
+**/.env
+**/.env.*
 !.env.example
 
-# ==========================
-# Expo
-# ==========================
+# Expo / React Native
 .expo/
 .expo-shared/
 web-build/
 dist/
-
-# ==========================
-# React Native
-# ==========================
 *.apk
 *.aab
 
-# ==========================
-# Build
-# ==========================
+# Backend / frontend build outputs
 build/
 coverage/
 .tmp/
 temp/
+.cache/
+.parcel-cache/
 
-# ==========================
+# Android native local files
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/**/*.keystore
+android/**/*.jks
+
+# iOS native generated files
+ios/Pods/
+ios/build/
+ios/DerivedData/
+
 # Logs
-# ==========================
 logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# ==========================
 # IDE
-# ==========================
 .vscode/
 .idea/
 
-# ==========================
-# macOS
-# ==========================
+# OS files
 .DS_Store
-
-# ==========================
-# Windows
-# ==========================
 Thumbs.db
 
-# ==========================
-# Secrets
-# ==========================
-google-services.json
-GoogleService-Info.plist
-
-# ==========================
-# Local database
-# ==========================
+# Local databases
 *.sqlite
 *.db
 
-# ==========================
-# Cache
-# ==========================
-.cache/
-.parcel-cache/
-
-# ==========================
-# Typescript
-# ==========================
+# TypeScript
 *.tsbuildinfo
+
+# Firebase / service files
+google-services.json
+GoogleService-Info.plist

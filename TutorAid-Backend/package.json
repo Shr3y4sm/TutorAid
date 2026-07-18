@@ -8,11 +8,11 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@stream-io/node-sdk": "^0.7.51",
-    "@supabase/supabase-js": "^2.110.0",
+    "@stream-io/node-sdk": "^0.7.62",
+    "@supabase/supabase-js": "^2.110.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "express": "^4.21.2",
+    "express": "^4.22.2",
     "multer": "^2.2.0"
   },
   "devDependencies": {
