@@ -11,10 +11,12 @@ import { router } from "expo-router";
 
 import { getCurrentStudentId } from "@/services/studentService";
 import { getStudentAssignments } from "@/api/studentAssignments";
-
+import { StudentAssignment }
+from "@/types/assignment";
 export default function StudentAssignmentsScreen() {
   const [loading, setLoading] = useState(true);
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignments, setAssignments] =
+    useState<StudentAssignment[]>([]);
 
   useEffect(() => {
     loadAssignments();

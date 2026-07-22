@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 import { getNotifications } from "@/api/notifications";
-
+import { getCurrentStudentId } from "@/services/studentService";
 type HeaderProps = {
   name: string;
   subtitle: string;
@@ -25,20 +25,22 @@ export default function Header({
     loadNotifications();
   }, []);
 
-  async function loadNotifications() {
-    try {
-      const notifications = await getNotifications();
+ async function loadNotifications() {
+  try {
+    const studentId = await getCurrentStudentId();
 
-      const unread = notifications.filter(
-        (item) => !item.read
-      ).length;
+    const notifications = await getNotifications(studentId);
 
-      setUnreadCount(unread);
-    } catch (error) {
-      console.log(error);
-    }
+    const unread = notifications.filter(
+      (item) => !item.is_read
+    ).length;
+
+    setUnreadCount(unread);
+  } catch (error) {
+    console.error("Failed to load notifications:", error);
+    setUnreadCount(0);
   }
-
+}
   return (
     <View style={styles.container}>
       <View>

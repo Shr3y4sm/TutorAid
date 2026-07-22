@@ -14,7 +14,9 @@ import teacherAttendanceRoutes from "./routes/teacherAttendance.routes";
 import teacherScheduleRoutes from "./routes/teacherSchedule.routes";
 import teacherAiRoutes from "./routes/teacherAi.routes";
 import authRoutes from "./routes/auth.routes";
-
+import { errorMiddleware } from "./middleware/error.middleware";
+import { getResourceStats } from "./controllers/resource.controller";
+import router from "./routes/resource.routes";
 
 const app = express();
 
@@ -33,7 +35,10 @@ app.use("/stream", streamRoutes);
 app.use("/student", studentRoutes);
 app.use("/courses", courseRoutes);
 app.use("/assignments", assignmentRoutes);
-app.use("/attendance", attendanceRoutes);
+app.use(
+  "/attendance",
+  attendanceRoutes
+);
 app.use("/notifications", notificationRoutes);
 app.use("/teacher", teacherRoutes);
 app.use("/teacher/students", teacherStudentRoutes);
@@ -45,4 +50,10 @@ app.use(
 app.use("/teacher/schedule", teacherScheduleRoutes);
 app.use("/teacher/ai", teacherAiRoutes);
 app.use("/auth", authRoutes);
+app.use(errorMiddleware);
+router.get(
+    "/stats",
+    getResourceStats
+);
+app.use("/resources", router);
 export default app;

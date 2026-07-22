@@ -1,51 +1,110 @@
 import { Request, Response } from "express";
-import supabase from "../config/supabase";
 
-export async function getAttendance(
-  req: Request,
-  res: Response
-) {
-  try {
-    const studentId = req.query.studentId as string;
+import { AttendanceService } from "../services/attendance.service";
+import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
 
-    const { data, error } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("student_id", studentId);
+export const markAttendance = asyncHandler(
+  async (req: Request, res: Response) => {
 
-    if (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
+    const {
+      studentId,
+      teacherId,
+      attendanceDate,
+      status,
+      remarks,
+    } = req.body;
 
-    const total = data.length;
+    const attendance =
+      await AttendanceService.markAttendance(
+        studentId,
+        teacherId,
+        attendanceDate,
+        status,
+        remarks
+      );
 
-    const attended = data.filter(
-      (x) => x.present
-    ).length;
-
-    const missed = total - attended;
-
-    const overall =
-      total === 0
-        ? 0
-        : Math.round((attended / total) * 100);
-
-    res.json({
-      success: true,
-      data: {
-        overallPercentage: overall,
-        attendedClasses: attended,
-        missedClasses: missed,
-        subjects: [],
-      },
-    });
-  } catch {
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-    });
+    return ApiResponse.created(
+      res,
+      attendance,
+      "Attendance marked."
+    );
   }
-}
+);
+
+export const getAttendanceByDate = asyncHandler(
+  async (req: Request, res: Response) => {
+
+    const attendanceDate =
+      req.query.date as string;
+
+    const attendance =
+      await AttendanceService.getAttendanceByDate(
+        attendanceDate
+      );
+
+    return ApiResponse.success(
+      res,
+      attendance
+    );
+  }
+);
+
+export const getStudentAttendance = asyncHandler(
+  async (req: Request, res: Response) => {
+
+    const attendance =
+      await AttendanceService.getStudentAttendance(
+        req.params.id
+      );
+
+    return ApiResponse.success(
+      res,
+      attendance
+    );
+  }
+);
+
+export const updateAttendance = asyncHandler(
+  async (req: Request, res: Response) => {
+
+    const attendance =
+      await AttendanceService.updateAttendance(
+        req.params.id,
+        req.body.status,
+        req.body.remarks
+      );
+
+    return ApiResponse.success(
+      res,
+      attendance,
+      "Attendance updated."
+    );
+  }
+);
+
+export const deleteAttendance = asyncHandler(
+  async (req: Request, res: Response) => {
+
+    await AttendanceService.deleteAttendance(
+      req.params.id
+    );
+
+    return ApiResponse.noContent(res);
+  }
+);
+
+export const getAttendanceSummary = asyncHandler(
+  async (req: Request, res: Response) => {
+
+    const summary =
+      await AttendanceService.getAttendanceSummary(
+        req.params.id
+      );
+
+    return ApiResponse.success(
+      res,
+      summary
+    );
+  }
+);

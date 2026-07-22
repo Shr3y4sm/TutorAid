@@ -1,46 +1,46 @@
 import { api } from "./client";
 
+import { ApiResponse } from "@/types/api";
+
+import {
+  StudentAssignment,
+  Assignment,
+} from "@/types/assignment";
+
 export async function getStudentAssignments(
   studentId: string
-) {
-  const response = await api<{
-    success: boolean;
-    data: any[];
-  }>(
-    `/student/assignments?studentId=${studentId}`
-  );
+): Promise<StudentAssignment[]> {
+  const response =
+    await api<ApiResponse<StudentAssignment[]>>(
+      `/student/assignments?studentId=${studentId}`
+    );
 
   return response.data;
 }
 
 export async function getStudentAssignment(
-  id: string
-) {
-  const response = await api<{
-    success: boolean;
-    data: any;
-  }>(
-    `/student/assignments/${id}`
-  );
+  assignmentId: string
+): Promise<Assignment> {
+  const response =
+    await api<ApiResponse<Assignment>>(
+      `/student/assignments/${assignmentId}`
+    );
 
   return response.data;
 }
 
 export async function submitAssignment(
-    assignmentId: string,
-    body: {
-        student_id: string;
-        file_url: string;
-        remarks: string;
+  assignmentId: string,
+  body: {
+    student_id: string;
+    file_url: string;
+  }
+): Promise<ApiResponse<null>> {
+  return api<ApiResponse<null>>(
+    `/student/assignments/${assignmentId}/submit`,
+    {
+      method: "POST",
+      body,
     }
-) {
-    const response = await api(
-        `/student/assignments/${assignmentId}/submit`,
-        {
-            method: "POST",
-            body
-        }
-    );
-
-    return response;
+  );
 }

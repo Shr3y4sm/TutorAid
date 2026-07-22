@@ -57,7 +57,7 @@ export async function registerStudent(
     data: any;
   }>("/auth/student", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: payload,
   });
 
   return response;

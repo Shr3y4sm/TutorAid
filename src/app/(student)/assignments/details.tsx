@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-
+import { Assignment }
+from "@/types/assignment";
 import { router, useLocalSearchParams } from "expo-router";
 import { getStudentAssignment } from "@/api/studentAssignments";
 
@@ -15,8 +16,8 @@ export default function AssignmentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [loading, setLoading] = useState(true);
-  const [assignment, setAssignment] = useState<any>(null);
-
+ const [assignment, setAssignment] =
+    useState<Assignment | null>(null);
   useEffect(() => {
     loadAssignment();
   }, []);
@@ -90,7 +91,7 @@ export default function AssignmentDetailsScreen() {
       params: { id },
     })
   }
->
+></TouchableOpacity>
     </ScrollView>
   );
 }

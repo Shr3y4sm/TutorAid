@@ -284,53 +284,50 @@ export async function getStudentAssignment(
 }
 
 export async function submitAssignment(
-    req: Request,
-    res: Response
+  req: Request,
+  res: Response
 ) {
-    try {
+  try {
+    const { id } = req.params;
 
-        const { id } = req.params;
+    const {
+      student_id,
+      file_url,
+    } = req.body;
 
-        const {
-            student_id,
-            file_url,
-            remarks
-        } = req.body;
+    // Save submission
+    const { error: submissionError } = await supabase
+      .from("assignment_submissions")
+      .upsert({
+        assignment_id: id,
+        student_id,
+        file_url,
+        status: "Submitted",
+      });
 
-        const { error: submitError } =
-            await supabase
-                .from("assignment_submissions")
-                .upsert({
-                    assignment_id: id,
-                    student_id,
-                    file_url,
-                    remarks
-                });
+    if (submissionError) throw submissionError;
 
-        if (submitError) throw submitError;
+    // Update assignment status for teacher view
+    const { error: assignmentError } = await supabase
+      .from("assignment_students")
+      .update({
+        status: "Submitted",
+        submitted_at: new Date().toISOString(),
+      })
+      .eq("assignment_id", id)
+      .eq("student_id", student_id);
 
-        const { error: statusError } =
-            await supabase
-                .from("assignment_students")
-                .update({
-                    status: "Submitted",
-                    submitted_at: new Date()
-                })
-                .eq("assignment_id", id)
-                .eq("student_id", student_id);
+    if (assignmentError) throw assignmentError;
 
-        if (statusError) throw statusError;
+    res.json({
+      success: true,
+      message: "Assignment submitted successfully.",
+    });
 
-        res.json({
-            success: true
-        });
-
-    } catch (err: any) {
-
-        res.status(500).json({
-            success: false,
-            message: err.message
-        });
-
-    }
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 }

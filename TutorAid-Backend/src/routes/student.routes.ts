@@ -21,7 +21,7 @@ router.get("/assignments", getStudentAssignments);
 
 router.get("/assignments/:id", getStudentAssignment);
 router.post(
-    "/assignments/:id/submit",
-    submitAssignment
+  "/assignments/:id/submit",
+  submitAssignment
 );
 export default router;

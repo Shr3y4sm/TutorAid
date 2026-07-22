@@ -1,43 +1,62 @@
 import { API_BASE_URL } from "@/config/env";
 
+export interface ApiOptions
+  extends Omit<RequestInit, "body"> {
+  body?: unknown;
+}
+
 export async function api<T>(
   endpoint: string,
-  options?: RequestInit
+  options: ApiOptions = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  console.log("🌐 URL:", url);
-
   const controller = new AbortController();
 
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, 10000);
+  const timeout = setTimeout(
+    () => controller.abort(),
+    10000
+  );
+
+  const isFormData =
+    options.body instanceof FormData;
 
   try {
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
+
+      body: isFormData
+        ? (options.body as FormData)
+        : options.body != null
+        ? JSON.stringify(options.body)
+        : undefined,
+
       headers: {
-        "Content-Type": "application/json",
-        ...(options?.headers || {}),
+        ...(isFormData
+          ? {}
+          : {
+              "Content-Type":
+                "application/json",
+            }),
+        ...(options.headers ?? {}),
       },
     });
 
     clearTimeout(timeout);
 
-    console.log("🌐 STATUS:", response.status);
-
     const json = await response.json();
 
-    console.log("🌐 JSON:", JSON.stringify(json));
+    if (!response.ok) {
+      throw new Error(
+        json.message ??
+          "Something went wrong."
+      );
+    }
 
     return json;
-  } catch (err) {
+
+  } finally {
     clearTimeout(timeout);
-
-    console.log("🌐 FETCH ERROR:", err);
-
-    throw err;
   }
 }

@@ -6,10 +6,7 @@ export async function getCurrentTeacherId(): Promise<string> {
     error: authError,
   } = await supabase.auth.getUser();
 
-  console.log("AUTH USER:", user);
-
   if (authError) {
-    console.log("AUTH ERROR:", authError);
     throw authError;
   }
 
@@ -17,24 +14,46 @@ export async function getCurrentTeacherId(): Promise<string> {
     throw new Error("No logged in user.");
   }
 
-  console.log("AUTH USER ID:", user.id);
-
-  const { data, error } = await supabase
+  const { data: teacher, error } = await supabase
     .from("teachers")
-    .select("*");
+    .select("id")
+    .eq("auth_user_id", user.id)
+    .single();
 
-  console.log("TEACHERS:", data);
-  console.log("SUPABASE ERROR:", error);
-
-  const teacher = data?.find(
-    (t) => t.auth_user_id === user.id
-  );
-
-  console.log("MATCHED TEACHER:", teacher);
+  if (error) {
+    throw error;
+  }
 
   if (!teacher) {
     throw new Error("Teacher profile not found.");
   }
 
   return teacher.id;
+}
+
+export async function getCurrentTeacher() {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError) {
+    throw authError;
+  }
+
+  if (!user) {
+    throw new Error("No logged in user.");
+  }
+
+  const { data: teacher, error } = await supabase
+    .from("teachers")
+    .select("*")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return teacher;
 }

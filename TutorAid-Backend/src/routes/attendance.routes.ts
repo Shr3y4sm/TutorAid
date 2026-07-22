@@ -1,8 +1,53 @@
 import { Router } from "express";
-import { getAttendance } from "../controllers/attendance.controller";
+
+import {
+  markAttendance,
+  getAttendanceByDate,
+  getStudentAttendance,
+  updateAttendance,
+  deleteAttendance,
+  getAttendanceSummary,
+} from "../controllers/attendance.controller";
+
+import { validate } from "../middleware/validate.middleware";
+
+import {
+  markAttendanceSchema,
+  updateAttendanceSchema,
+} from "../validators/attendance.validator";
 
 const router = Router();
 
-router.get("/", getAttendance);
+router.post(
+  "/",
+  validate(markAttendanceSchema),
+  markAttendance
+);
+
+router.get(
+  "/",
+  getAttendanceByDate
+);
+
+router.get(
+  "/student/:id",
+  getStudentAttendance
+);
+
+router.get(
+  "/summary/:id",
+  getAttendanceSummary
+);
+
+router.patch(
+  "/:id",
+  validate(updateAttendanceSchema),
+  updateAttendance
+);
+
+router.delete(
+  "/:id",
+  deleteAttendance
+);
 
 export default router;

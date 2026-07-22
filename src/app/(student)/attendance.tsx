@@ -9,39 +9,56 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getAttendance } from "@/api/attendance";
+import {
+  getAttendanceSummary,
+  getStudentAttendance,
+} from "@/api/attendance";
 
 import AttendanceSummary from "@/features/attendance/components/AttendanceSummary";
-import SubjectAttendanceRow from "@/features/attendance/components/SubjectAttendanceRow";
 
-import { AttendanceData } from "@/features/attendance/types/attendance";
+import {
+  Attendance,
+  AttendanceSummary as AttendanceSummaryType,
+} from "@/types/attendance";
+
 import { getCurrentStudentId } from "@/services/studentService";
-export default function AttendanceScreen() {
-  const [attendance, setAttendance] =
-    useState<AttendanceData | null>(null);
 
+export default function AttendanceScreen() {
+  const [summary, setSummary] = useState<AttendanceSummaryType>({
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    leave: 0,
+    percentage: 0,
+  });
+
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
-  async function loadAttendance() {
+  const loadAttendance = async () => {
     try {
       setError("");
 
-      const studentId =
-  await getCurrentStudentId();
+      const studentId = await getCurrentStudentId();
 
-const data =
-  await getAttendance(studentId);
+      const [summaryData, attendanceData] = await Promise.all([
+        getAttendanceSummary(studentId),
+        getStudentAttendance(studentId),
+      ]);
 
-      setAttendance(data);
-    } catch {
+      setSummary(summaryData);
+      setAttendance(attendanceData);
+    } catch (err) {
+      console.error(err);
       setError("Failed to load attendance.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  };
 
   useEffect(() => {
     loadAttendance();
@@ -56,29 +73,15 @@ const data =
     return (
       <SafeAreaView style={styles.center}>
         <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.message}>
-          Loading attendance...
-        </Text>
+        <Text style={styles.message}>Loading attendance...</Text>
       </SafeAreaView>
     );
   }
 
-  if (error.length > 0) {
+  if (error) {
     return (
       <SafeAreaView style={styles.center}>
-        <Text style={styles.error}>
-          {error}
-        </Text>
-      </SafeAreaView>
-    );
-  }
-
-  if (!attendance) {
-    return (
-      <SafeAreaView style={styles.center}>
-        <Text style={styles.message}>
-          No attendance available.
-        </Text>
+        <Text style={styles.error}>{error}</Text>
       </SafeAreaView>
     );
   }
@@ -94,29 +97,44 @@ const data =
           />
         }
       >
-        <Text style={styles.heading}>
-          Attendance
-        </Text>
+        <Text style={styles.heading}>Attendance</Text>
 
         <AttendanceSummary
-          overall={attendance.overallPercentage}
-          attended={attendance.attendedClasses}
-          missed={attendance.missedClasses}
+          overall={summary.percentage}
+          attended={summary.present}
+          missed={summary.absent + summary.leave}
         />
 
-        <Text style={styles.sectionTitle}>
-          Subject Wise Attendance
-        </Text>
+        <Text style={styles.sectionTitle}>Attendance History</Text>
 
-        {attendance.subjects.map((subject) => (
-          <SubjectAttendanceRow
-            key={subject.id}
-            subject={subject.subject}
-            attended={subject.attended}
-            total={subject.total}
-            percentage={subject.percentage}
-          />
-        ))}
+        {attendance.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.message}>
+              No attendance records found.
+            </Text>
+          </View>
+        ) : (
+          attendance.map((record) => (
+            <View
+              key={record.id}
+              style={styles.historyCard}
+            >
+              <Text style={styles.historyDate}>
+                {new Date(record.attendance_date).toLocaleDateString()}
+              </Text>
+
+              <Text style={styles.historyStatus}>
+                {record.status}
+              </Text>
+
+              {record.remarks ? (
+                <Text style={styles.historyRemarks}>
+                  {record.remarks}
+                </Text>
+              ) : null}
+            </View>
+          ))
+        )}
 
         <View style={{ height: 30 }} />
       </ScrollView>
@@ -148,9 +166,42 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    marginBottom: 15,
     marginTop: 10,
+    marginBottom: 15,
     color: "#111827",
+  },
+
+  emptyContainer: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 20,
+    alignItems: "center",
+  },
+
+  historyCard: {
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 12,
+  },
+
+  historyDate: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+  },
+
+  historyStatus: {
+    marginTop: 6,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#2563EB",
+  },
+
+  historyRemarks: {
+    marginTop: 6,
+    color: "#64748B",
+    fontSize: 14,
   },
 
   message: {
