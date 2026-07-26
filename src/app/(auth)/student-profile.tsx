@@ -78,7 +78,7 @@ export default function StudentProfileScreen() {
     try {
       setLoading(true);
 
-      await registerStudent({
+      const result = await registerStudent({
         auth_user_id: user.id,
         full_name: fullName,
         email: user.email ?? "",
@@ -89,12 +89,19 @@ export default function StudentProfileScreen() {
         teacher_code: teacher.teacher_code,
       });
 
+      if (!result.success) {
+        throw new Error(
+          result.message ?? "Unable to register student."
+        );
+      }
+
       router.replace("/(student)/home");
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
 
       Alert.alert(
-        "Unable to register student."
+        "Registration Failed",
+        err.message ?? "Unable to register student."
       );
     } finally {
       setLoading(false);

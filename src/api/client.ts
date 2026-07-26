@@ -1,8 +1,23 @@
 import { API_BASE_URL } from "@/config/env";
+import supabase from "@/config/supabase";
 
 export interface ApiOptions
   extends Omit<RequestInit, "body"> {
   body?: unknown;
+}
+
+/**
+ * Custom error that preserves the HTTP status code so callers
+ * can distinguish 401 (unauthorized) from other failures.
+ */
+export class ApiError extends Error {
+  statusCode: number;
+
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+  }
 }
 
 export async function api<T>(
@@ -20,6 +35,14 @@ export async function api<T>(
 
   const isFormData =
     options.body instanceof FormData;
+
+  // -------------------------------------------------------------------
+  // Automatically attach the current Supabase access token so every
+  // backend request passes the authenticate middleware.
+  // -------------------------------------------------------------------
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   try {
     const response = await fetch(url, {
@@ -39,6 +62,11 @@ export async function api<T>(
               "Content-Type":
                 "application/json",
             }),
+        ...(session?.access_token
+          ? {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          : {}),
         ...(options.headers ?? {}),
       },
     });
@@ -48,14 +76,13 @@ export async function api<T>(
     const json = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        json.message ??
-          "Something went wrong."
+      throw new ApiError(
+        response.status,
+        json.message ?? "Something went wrong."
       );
     }
 
     return json;
-
   } finally {
     clearTimeout(timeout);
   }

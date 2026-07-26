@@ -1,7 +1,31 @@
-import { Tabs } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { Tabs, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import supabase from "@/config/supabase";
+
 export default function StudentLayout() {
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.replace("/(auth)/login");
+      } else {
+        setChecking(false);
+      }
+    });
+  }, []);
+
+  if (checking) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{

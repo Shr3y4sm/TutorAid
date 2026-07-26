@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -7,7 +7,6 @@ import {
   View,
   Share,
   TouchableOpacity,
-  Alert,
 } from "react-native";
 
 import * as Clipboard from "expo-clipboard";
@@ -16,7 +15,7 @@ import { router } from "expo-router";
 import Colors from "@/theme/colors";
 
 import { getTeacherDashboard } from "@/api/teacher";
-import { getCurrentTeacherId } from "@/services/teacherService";
+import { ApiError } from "@/api/client";
 
 import {
   TeacherDashboardData,
@@ -37,29 +36,45 @@ export default function TeacherDashboard() {
   const [error, setError] =
     useState("");
 
+  // -------------------------------------------------------------------
+  // Prevent infinite 401 → redirect → re-render → 401 loops.
+  // If the redirect has already been triggered once we bail out instead
+  // of repeatedly firing router.replace.
+  // -------------------------------------------------------------------
+  const redirecting = useRef(false);
+
   useEffect(() => {
     load();
   }, []);
 
   async function load() {
-  try {
-    const teacherId =
-      await getCurrentTeacherId();
+    try {
+      const data = await getTeacherDashboard();
+      setDashboard(data);
+    } catch (err: any) {
+      console.error(err);
 
-    const data =
-      await getTeacherDashboard(
-        teacherId
-      );
+      // -----------------------------------------------------------------
+      // 401 handling — session expired or token is invalid.
+      // Redirect to login, but only once (ref guard).
+      // -----------------------------------------------------------------
+      if (
+        err instanceof ApiError &&
+        err.statusCode === 401
+      ) {
+        if (!redirecting.current) {
+          redirecting.current = true;
+          router.replace("/(auth)/login");
+        }
 
-    setDashboard(data);
+        return;
+      }
 
-  } catch (err: any) {
-    console.log(err);
-    setError(err.message);
-  } finally {
-    setLoading(false);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   if (loading) {
     return (

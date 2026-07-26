@@ -17,6 +17,7 @@ import authRoutes from "./routes/auth.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
 import { getResourceStats } from "./controllers/resource.controller";
 import router from "./routes/resource.routes";
+import { authenticate } from "./middleware/auth.middleware";
 
 const app = express();
 
@@ -31,29 +32,23 @@ app.get("/health", (_req, res) => {
   });
 });
 
-app.use("/stream", streamRoutes);
-app.use("/student", studentRoutes);
-app.use("/courses", courseRoutes);
-app.use("/assignments", assignmentRoutes);
-app.use(
-  "/attendance",
-  attendanceRoutes
-);
-app.use("/notifications", notificationRoutes);
-app.use("/teacher", teacherRoutes);
-app.use("/teacher/students", teacherStudentRoutes);
-app.use("/teacher/assignments", teacherAssignmentRoutes);
-app.use(
-    "/teacher/attendance",
-    teacherAttendanceRoutes
-);
-app.use("/teacher/schedule", teacherScheduleRoutes);
-app.use("/teacher/ai", teacherAiRoutes);
+// Public routes (no authentication required)
 app.use("/auth", authRoutes);
+
+// Protected routes (authentication required)
+app.use("/stream", authenticate, streamRoutes);
+app.use("/student", authenticate, studentRoutes);
+app.use("/courses", authenticate, courseRoutes);
+app.use("/assignments", authenticate, assignmentRoutes);
+app.use("/attendance", authenticate, attendanceRoutes);
+app.use("/notifications", authenticate, notificationRoutes);
+app.use("/teacher", authenticate, teacherRoutes);
+app.use("/teacher/students", authenticate, teacherStudentRoutes);
+app.use("/teacher/assignments", authenticate, teacherAssignmentRoutes);
+app.use("/teacher/attendance", authenticate, teacherAttendanceRoutes);
+app.use("/teacher/schedule", authenticate, teacherScheduleRoutes);
+app.use("/teacher/ai", authenticate, teacherAiRoutes);
+app.use("/resources", authenticate, router);
+
 app.use(errorMiddleware);
-router.get(
-    "/stats",
-    getResourceStats
-);
-app.use("/resources", router);
 export default app;

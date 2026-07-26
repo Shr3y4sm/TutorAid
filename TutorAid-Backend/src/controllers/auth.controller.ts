@@ -2,6 +2,22 @@ import { Request, Response } from "express";
 import supabase from "../config/supabase";
 import { generateTeacherCode } from "../utils/generateTeacherCode";
 
+/**
+ * Safely attempt a rollback delete operation.
+ * Logs failures without throwing — the original error is always re-thrown separately.
+ */
+async function safeRollback(
+  table: string,
+  column: string,
+  value: string
+): Promise<void> {
+  try {
+    await supabase.from(table).delete().eq(column, value);
+  } catch (rollbackErr) {
+    console.log(`[ROLLBACK FAILED] ${table} delete:`, rollbackErr);
+  }
+}
+
 export async function registerTeacher(
   req: Request,
   res: Response
@@ -34,6 +50,15 @@ if (existingTeacher) {
     const teacherCode =
       await generateTeacherCode(full_name);
 
+    const trimmedExperience = experience?.toString().trim() ?? "";
+    const parsedExperience = Number(trimmedExperience);
+    const experienceValue =
+      trimmedExperience === "" ||
+      experience == null ||
+      Number.isNaN(parsedExperience)
+        ? null
+        : parsedExperience;
+
     const { data, error } = await supabase
   .from("teachers")
   .insert({
@@ -44,10 +69,7 @@ if (existingTeacher) {
     subjects,
     designation,
     organization,
-    experience:
-      experience === "" || experience == null
-        ? null
-        : Number(experience),
+    experience: experienceValue,
     teacher_code: teacherCode,
   })
   .select()
@@ -55,10 +77,17 @@ if (existingTeacher) {
 
     if (error) throw error;
 
-    await supabase.from("user_roles").insert({
-      auth_user_id,
-      role: "teacher",
-    });
+    const { error: roleError } = await supabase
+      .from("user_roles")
+      .insert({
+        auth_user_id,
+        role: "teacher",
+      });
+
+    if (roleError) {
+      await safeRollback("teachers", "id", data.id);
+      throw roleError;
+    }
 
     res.status(201).json({
       success: true,
@@ -122,12 +151,20 @@ export async function registerStudent(
       teacher_code,
     } = req.body;
 
-    const { data: existingStudent } =
+    // [DIAGNOSTIC] Operation 1: existing student lookup
+    const { data: existingStudent, error: existingError } =
   await supabase
     .from("students")
     .select("id")
     .eq("auth_user_id", auth_user_id)
     .maybeSingle();
+
+console.log("[DIAGNOSTIC] existingStudent lookup:", {
+  operation: "existing_student_lookup",
+  success: !existingError,
+  error: existingError,
+  data: existingStudent,
+});
 
 if (existingStudent) {
   return res.status(200).json({
@@ -137,12 +174,20 @@ if (existingStudent) {
   });
 }
 
+    // [DIAGNOSTIC] Operation 2: teacher lookup
     const { data: teacher, error: teacherError } =
       await supabase
         .from("teachers")
         .select("id")
         .eq("teacher_code", teacher_code)
         .single();
+
+console.log("[DIAGNOSTIC] teacher lookup:", {
+  operation: "teacher_lookup",
+  success: !teacherError,
+  error: teacherError,
+  data: teacher,
+});
 
     if (teacherError || !teacher) {
       return res.status(404).json({
@@ -151,6 +196,7 @@ if (existingStudent) {
       });
     }
 
+    // [DIAGNOSTIC] Operation 3: students insert
     const { data: student, error: studentError } =
       await supabase
         .from("students")
@@ -162,13 +208,20 @@ if (existingStudent) {
           class: studentClass,
           parent_name,
           parent_phone,
-          teacher_code,
         })
         .select()
         .single();
 
+console.log("[DIAGNOSTIC] students insert:", {
+  operation: "students_insert",
+  success: !studentError,
+  error: studentError,
+  data: student,
+});
+
     if (studentError) throw studentError;
 
+    // [DIAGNOSTIC] Operation 4: teacher_students insert
     const { error: linkError } =
       await supabase
         .from("teacher_students")
@@ -177,14 +230,41 @@ if (existingStudent) {
           student_id: student.id,
         });
 
-    if (linkError) throw linkError;
+console.log("[DIAGNOSTIC] teacher_students insert:", {
+  operation: "teacher_students_insert",
+  success: !linkError,
+  error: linkError,
+  data: null,
+});
 
-    await supabase
-      .from("user_roles")
-      .insert({
-        auth_user_id,
-        role: "student",
-      });
+    if (linkError) {
+      await safeRollback("students", "id", student.id);
+      throw linkError;
+    }
+
+    // [DIAGNOSTIC] Operation 5: user_roles insert
+    const { data: roleData, error: roleError } =
+      await supabase
+        .from("user_roles")
+        .insert({
+          auth_user_id,
+          role: "student",
+        })
+        .select()
+        .single();
+
+console.log("[DIAGNOSTIC] user_roles insert:", {
+  operation: "user_roles_insert",
+  success: !roleError,
+  error: roleError,
+  data: roleData,
+});
+
+if (roleError) {
+  await safeRollback("teacher_students", "student_id", student.id);
+  await safeRollback("students", "id", student.id);
+  throw roleError;
+}
 
     res.status(201).json({
       success: true,
@@ -192,6 +272,7 @@ if (existingStudent) {
     });
 
   } catch (err: any) {
+    console.log("[DIAGNOSTIC] registerStudent caught error:", err);
     res.status(500).json({
       success: false,
       message: err.message,

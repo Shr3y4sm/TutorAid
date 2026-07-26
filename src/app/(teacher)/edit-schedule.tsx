@@ -8,26 +8,36 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import Colors from "@/theme/colors";
-import { getCurrentTeacherId } from "@/services/teacherService";
-import { createSchedule } from "@/api/teacherSchedule";
+import { updateSchedule } from "@/api/teacherSchedule";
 
-export default function AddScheduleScreen() {
-  const [subject, setSubject] = useState("");
-  const [section, setSection] = useState("");
-  const [room, setRoom] = useState("");
-  const [day, setDay] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+export default function EditScheduleScreen() {
+  const params = useLocalSearchParams();
+
+  const [subject, setSubject] = useState(
+    String(params.subject ?? "")
+  );
+  const [section, setSection] = useState(
+    String(params.section ?? "")
+  );
+  const [room, setRoom] = useState(
+    String(params.room ?? "")
+  );
+  const [day, setDay] = useState(
+    String(params.day ?? "")
+  );
+  const [startTime, setStartTime] = useState(
+    String(params.start_time ?? "")
+  );
+  const [endTime, setEndTime] = useState(
+    String(params.end_time ?? "")
+  );
 
   async function save() {
     try {
-      const teacherId = await getCurrentTeacherId();
-
-      await createSchedule({
-        teacher_id: teacherId,
+      await updateSchedule(String(params.id), {
         subject,
         section,
         room,
@@ -38,7 +48,7 @@ export default function AddScheduleScreen() {
 
       Alert.alert(
         "Success",
-        "Schedule created successfully."
+        "Schedule updated successfully."
       );
 
       router.back();
@@ -48,7 +58,7 @@ export default function AddScheduleScreen() {
 
       Alert.alert(
         "Error",
-        "Unable to create schedule."
+        "Unable to update schedule."
       );
     }
   }
@@ -59,7 +69,7 @@ export default function AddScheduleScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Text style={styles.title}>
-        Add Schedule
+        Edit Schedule
       </Text>
 
       <TextInput
@@ -109,7 +119,7 @@ export default function AddScheduleScreen() {
         onPress={save}
       >
         <Text style={styles.buttonText}>
-          Save Schedule
+          Save Changes
         </Text>
       </TouchableOpacity>
     </ScrollView>

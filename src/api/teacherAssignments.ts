@@ -24,7 +24,7 @@ export async function createAssignment(
     data: TeacherAssignment;
   }>("/teacher/assignments", {
     method: "POST",
-    body: JSON.stringify(assignment),
+    body: assignment,
   });
 
   return response.data;
@@ -39,7 +39,7 @@ export async function updateAssignment(
     data: TeacherAssignment;
   }>(`/teacher/assignments/${id}`, {
     method: "PUT",
-    body: JSON.stringify(assignment),
+    body: assignment,
   });
 
   return response.data;

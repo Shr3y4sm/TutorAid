@@ -33,7 +33,7 @@ export async function createSchedule(
     data: TeacherSchedule;
   }>("/teacher/schedule", {
     method: "POST",
-    body: JSON.stringify(schedule),
+    body: schedule,
   });
 
   return response.data;
@@ -56,7 +56,7 @@ export async function updateSchedule(
     data: TeacherSchedule;
   }>(`/teacher/schedule/${id}`, {
     method: "PUT",
-    body: JSON.stringify(schedule),
+    body: schedule,
   });
 
   return response.data;

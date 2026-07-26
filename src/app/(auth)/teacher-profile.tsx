@@ -37,7 +37,7 @@ export default function TeacherProfileScreen() {
         success: boolean;
       }>("/auth/teacher", {
         method: "POST",
-        body: JSON.stringify({
+        body: {
           auth_user_id: user.id,
           full_name: fullName,
           email: user.email,
@@ -45,8 +45,8 @@ export default function TeacherProfileScreen() {
           subjects,
           designation,
           organization,
-          experience,
-        }),
+          experience: experience.trim(),
+        },
       });
 
       if (!response.success) {
@@ -106,6 +106,7 @@ export default function TeacherProfileScreen() {
         value={experience}
         onChangeText={setExperience}
         style={styles.input}
+        keyboardType="numeric"
       />
 
       <Button
