@@ -108,9 +108,16 @@ export default function AddAssignmentScreen() {
 
     let fileUrl = "";
 
-    // Uploads temporarily disabled
     if (selectedFile) {
-      fileUrl = "";
+      fileUrl = await uploadAssignmentFile(
+        {
+          uri: selectedFile.uri,
+          name: selectedFile.name,
+          mimeType:
+            selectedFile.mimeType,
+        },
+        teacherId
+      );
     }
 
     await createAssignment({

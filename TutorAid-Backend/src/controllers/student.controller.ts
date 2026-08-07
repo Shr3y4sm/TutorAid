@@ -297,13 +297,18 @@ export async function submitAssignment(
     } = req.body;
 
     // Save submission
+    // If content (text answer) is provided, store it in file_url
+    // since the assignment_submissions table doesn't have a content column
+    const submissionFileUrl = content
+      ? content
+      : file_url;
+
     const { error: submissionError } = await supabase
       .from("assignment_submissions")
       .upsert({
         assignment_id: id,
         student_id,
-        file_url,
-        content,
+        file_url: submissionFileUrl,
         status: "Submitted",
       });
 
@@ -330,6 +335,62 @@ export async function submitAssignment(
     res.status(500).json({
       success: false,
       message: err.message,
+    });
+  }
+}
+
+
+export async function uploadStudentFile(
+  req: Request,
+  res: Response
+) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded.",
+      });
+    }
+
+    const extension =
+      req.file.originalname.split(".").pop();
+
+    const filename =
+      `student-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
+
+    const { error } =
+      await supabase.storage
+        .from("assignment-files")
+        .upload(
+          filename,
+          req.file.buffer,
+          {
+            contentType:
+              req.file.mimetype,
+            upsert: false,
+          }
+        );
+
+    if (error) throw error;
+
+    const { data } =
+      supabase.storage
+        .from("assignment-files")
+        .getPublicUrl(filename);
+
+    return res.json({
+      success: true,
+      file_url: data.publicUrl,
+    });
+
+  } catch (err: any) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        err.message ??
+        "Upload failed.",
     });
   }
 }

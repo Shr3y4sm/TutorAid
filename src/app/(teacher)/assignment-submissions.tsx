@@ -233,12 +233,12 @@ export default function AssignmentSubmissionsScreen() {
               </Text>
             ) : null}
 
-            {item.content ? (
+            {item.file_url ? (
               <Text
                 style={styles.contentPreview}
                 numberOfLines={3}
               >
-                {item.content}
+                {item.file_url}
               </Text>
             ) : null}
 
@@ -275,13 +275,13 @@ export default function AssignmentSubmissionsScreen() {
                 ?.full_name ?? "Unknown"}
             </Text>
 
-            {selectedSubmission?.content ? (
+            {selectedSubmission?.file_url ? (
               <View style={styles.answerBox}>
                 <Text style={styles.answerLabel}>
                   Student Answer
                 </Text>
                 <Text style={styles.answerText}>
-                  {selectedSubmission.content}
+                  {selectedSubmission.file_url}
                 </Text>
               </View>
             ) : null}

@@ -74,7 +74,6 @@ export interface TeacherSubmission {
   student_id: string;
   submitted_at: string;
   file_url?: string | null;
-  content?: string | null;
   marks?: number | null;
   feedback?: string | null;
   status: string;

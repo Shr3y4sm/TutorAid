@@ -177,7 +177,6 @@ export class AssignmentService {
           student_id,
           submitted_at,
           file_url,
-          content,
           marks,
           feedback,
           status,

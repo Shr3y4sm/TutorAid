@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Linking,
+  Alert,
 } from "react-native";
 import {
   Assignment,
@@ -95,11 +97,24 @@ export default function AssignmentDetailsScreen() {
       </View>
 
       {assignment.file_url ? (
-        <View style={styles.card}>
-          <Text style={styles.heading}>
-            Attachment Available
+        <TouchableOpacity
+          style={styles.attachmentButton}
+          onPress={() => {
+            const url = assignment.file_url;
+            if (url) {
+              Linking.openURL(url).catch(() => {
+                Alert.alert(
+                  "Error",
+                  "Unable to open attachment."
+                );
+              });
+            }
+          }}
+        >
+          <Text style={styles.attachmentText}>
+            📎 View Attachment
           </Text>
-        </View>
+        </TouchableOpacity>
       ) : null}
 
       {studentAssignment?.status === "Graded" ? (
@@ -236,6 +251,22 @@ const styles = StyleSheet.create({
   heading: {
     fontWeight: "700",
     marginBottom: 8,
+  },
+
+  attachmentButton: {
+    backgroundColor: "#EEF2FF",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#2563EB",
+  },
+
+  attachmentText: {
+    color: "#2563EB",
+    fontSize: 16,
+    fontWeight: "700",
   },
 
   button: {
