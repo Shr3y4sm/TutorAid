@@ -15,6 +15,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { getCurrentStudentId } from "@/services/studentService";
 import { getStudentAssignment } from "@/api/studentAssignments";
 import { submitAssignment } from "@/api/studentAssignments";
+import { uploadStudentFile } from "@/services/storageService";
 import { Assignment } from "@/types/assignment";
 
 export default function SubmitAssignmentScreen() {
@@ -102,9 +103,20 @@ export default function SubmitAssignmentScreen() {
     setSubmitting(true);
 
     try {
+      let fileUrl = "";
+
+      if (selectedFile) {
+        fileUrl = await uploadStudentFile({
+          uri: selectedFile.uri,
+          name: selectedFile.name,
+          mimeType:
+            selectedFile.mimeType,
+        });
+      }
+
       await submitAssignment(id, {
         student_id: studentId,
-        file_url: "",
+        file_url: fileUrl,
         content,
       });
 
@@ -194,9 +206,8 @@ export default function SubmitAssignmentScreen() {
 
       {selectedFile ? (
         <Text style={styles.note}>
-          Note: File uploads are disabled
-          in Expo Go. Your text answer
-          will be submitted.
+          File will be uploaded with
+          your submission.
         </Text>
       ) : null}
 

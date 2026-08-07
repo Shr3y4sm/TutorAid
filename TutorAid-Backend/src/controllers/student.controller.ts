@@ -394,3 +394,74 @@ export async function uploadStudentFile(
     });
   }
 }
+
+
+export async function uploadStudentFileBase64(
+  req: Request,
+  res: Response
+) {
+  try {
+    const {
+      base64,
+      filename,
+      mimeType,
+    } = req.body;
+
+    if (!base64 || !filename) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing file data.",
+      });
+    }
+
+    const extension =
+      filename.split(".").pop() ?? "bin";
+
+    const uploadFilename =
+      `student-${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 8)}.${extension}`;
+
+    // Convert base64 to Buffer
+    const buffer = Buffer.from(
+      base64,
+      "base64"
+    );
+
+    const { error } =
+      await supabase.storage
+        .from("assignment-files")
+        .upload(
+          uploadFilename,
+          buffer,
+          {
+            contentType:
+              mimeType ??
+              "application/octet-stream",
+            upsert: false,
+          }
+        );
+
+    if (error) throw error;
+
+    const { data } =
+      supabase.storage
+        .from("assignment-files")
+        .getPublicUrl(uploadFilename);
+
+    return res.json({
+      success: true,
+      file_url: data.publicUrl,
+    });
+
+  } catch (err: any) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        err.message ??
+        "Upload failed.",
+    });
+  }
+}

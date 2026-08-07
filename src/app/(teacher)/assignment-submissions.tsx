@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -138,6 +139,13 @@ export default function AssignmentSubmissionsScreen() {
     }
   }
 
+  function isFileUrl(url: string) {
+    return (
+      url.startsWith("http://") ||
+      url.startsWith("https://")
+    );
+  }
+
   function getStatusColor(
     status: string
   ) {
@@ -234,12 +242,32 @@ export default function AssignmentSubmissionsScreen() {
             ) : null}
 
             {item.file_url ? (
-              <Text
-                style={styles.contentPreview}
-                numberOfLines={3}
-              >
-                {item.file_url}
-              </Text>
+              isFileUrl(item.file_url) ? (
+                <TouchableOpacity
+                  style={styles.viewFileButton}
+                  onPress={() => {
+                    Linking.openURL(
+                      item.file_url!
+                    ).catch(() => {
+                      Alert.alert(
+                        "Error",
+                        "Unable to open file."
+                      );
+                    });
+                  }}
+                >
+                  <Text style={styles.viewFileText}>
+                    📎 View Submitted File
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <Text
+                  style={styles.contentPreview}
+                  numberOfLines={3}
+                >
+                  {item.file_url}
+                </Text>
+              )
             ) : null}
 
             {item.marks != null && (
@@ -280,9 +308,32 @@ export default function AssignmentSubmissionsScreen() {
                 <Text style={styles.answerLabel}>
                   Student Answer
                 </Text>
-                <Text style={styles.answerText}>
-                  {selectedSubmission.file_url}
-                </Text>
+
+                {isFileUrl(
+                  selectedSubmission.file_url
+                ) ? (
+                  <TouchableOpacity
+                    style={styles.viewFileButton}
+                    onPress={() => {
+                      Linking.openURL(
+                        selectedSubmission.file_url!
+                      ).catch(() => {
+                        Alert.alert(
+                          "Error",
+                          "Unable to open file."
+                        );
+                      });
+                    }}
+                  >
+                    <Text style={styles.viewFileText}>
+                      📎 Open File
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <Text style={styles.answerText}>
+                    {selectedSubmission.file_url}
+                  </Text>
+                )}
               </View>
             ) : null}
 
@@ -419,6 +470,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginBottom: 6,
+  },
+
+  viewFileButton: {
+    backgroundColor: "#EEF2FF",
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#2563EB",
+  },
+
+  viewFileText: {
+    color: "#2563EB",
+    fontSize: 14,
+    fontWeight: "700",
   },
 
   contentPreview: {

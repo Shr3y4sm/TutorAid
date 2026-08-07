@@ -8,6 +8,7 @@ import {
   getStudentAssignment,
   submitAssignment,
   uploadStudentFile,
+  uploadStudentFileBase64,
 } from "../controllers/student.controller";
 
 import upload from "../middleware/upload";
@@ -32,5 +33,10 @@ router.post(
   "/assignments/upload",
   upload.single("file"),
   uploadStudentFile
+);
+
+router.post(
+  "/assignments/upload-base64",
+  uploadStudentFileBase64
 );
 export default router;

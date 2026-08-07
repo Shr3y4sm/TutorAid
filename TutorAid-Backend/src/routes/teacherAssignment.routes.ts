@@ -8,6 +8,7 @@ import {
   updateAssignment,
   deleteAssignment,
   uploadAssignmentFile,
+  uploadAssignmentFileBase64,
   getAssignmentSubmissions,
 } from "../controllers/teacherAssignment.controller";
 
@@ -36,6 +37,11 @@ router.post(
   "/upload",
   upload.single("file"),
   uploadAssignmentFile
+);
+
+router.post(
+  "/upload-base64",
+  uploadAssignmentFileBase64
 );
 
 router.post(
