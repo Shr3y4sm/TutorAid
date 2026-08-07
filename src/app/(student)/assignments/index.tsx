@@ -92,6 +92,20 @@ export default function StudentAssignmentsScreen() {
             <Text>
               Status: {item.status}
             </Text>
+
+            {item.marks != null && (
+              <Text style={styles.marksText}>
+                Marks: {item.marks}/{assignment.max_marks}
+              </Text>
+            )}
+
+            {item.feedback ? (
+              <Text style={styles.feedbackText}>
+                {item.feedback.length > 80
+                  ? item.feedback.substring(0, 80) + "..."
+                  : item.feedback}
+              </Text>
+            ) : null}
           </TouchableOpacity>
         );
       }}
@@ -128,4 +142,18 @@ const styles = StyleSheet.create({
     color: "#2563EB",
     marginVertical: 4,
   },
+
+  marksText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#059E64",
+    marginTop: 4,
+  },
+
+  feedbackText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginTop: 4,
+  },
+
 });

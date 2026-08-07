@@ -17,6 +17,10 @@ import { deleteSchedule } from "@/api/teacherSchedule";
 export default function ScheduleDetailsScreen() {
   const params = useLocalSearchParams();
 
+  const scheduleId = Array.isArray(params.id)
+    ? params.id[0]
+    : params.id;
+
   function removeSchedule() {
     Alert.alert(
       "Delete Schedule",
@@ -32,7 +36,7 @@ export default function ScheduleDetailsScreen() {
           onPress: async () => {
             try {
               await deleteSchedule(
-                String(params.id)
+                String(scheduleId)
               );
 
               Alert.alert(

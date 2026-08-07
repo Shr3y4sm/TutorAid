@@ -164,6 +164,37 @@ export class AssignmentService {
     return data;
   }
 
+  static async getAssignmentSubmissions(
+    assignmentId: string
+  ) {
+
+    const { data, error } =
+      await supabase
+        .from("assignment_submissions")
+        .select(`
+          id,
+          assignment_id,
+          student_id,
+          submitted_at,
+          file_url,
+          content,
+          marks,
+          feedback,
+          status,
+          student:students(
+            id,
+            full_name,
+            class,
+            roll_no
+          )
+        `)
+        .eq("assignment_id", assignmentId);
+
+    if (error) throw error;
+
+    return data;
+  }
+
   static async submitAssignment(
     assignmentId: string,
     payload: {

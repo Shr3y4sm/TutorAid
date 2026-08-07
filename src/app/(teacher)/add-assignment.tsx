@@ -88,6 +88,16 @@ export default function AddAssignmentScreen() {
     return;
   }
 
+  if (!description.trim()) {
+    Alert.alert("Enter description.");
+    return;
+  }
+
+  if (!dueDate.trim()) {
+    Alert.alert("Enter due date.");
+    return;
+  }
+
   if (selectedStudents.length === 0) {
     Alert.alert("Select at least one student.");
     return;

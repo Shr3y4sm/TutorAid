@@ -34,6 +34,7 @@ export async function submitAssignment(
   body: {
     student_id: string;
     file_url: string;
+    content?: string;
   }
 ): Promise<ApiResponse<null>> {
   return api<ApiResponse<null>>(

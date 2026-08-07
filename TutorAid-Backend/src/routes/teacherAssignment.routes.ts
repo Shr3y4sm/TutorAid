@@ -8,6 +8,7 @@ import {
   updateAssignment,
   deleteAssignment,
   uploadAssignmentFile,
+  getAssignmentSubmissions,
 } from "../controllers/teacherAssignment.controller";
 
 import { validate } from "../middleware/validate.middleware";
@@ -50,6 +51,11 @@ router.put(
 );
 
 router.delete("/:id", deleteAssignment);
+
+router.get(
+    "/:id/submissions",
+    getAssignmentSubmissions
+);
 
 router.patch(
     "/submission/:id/grade",

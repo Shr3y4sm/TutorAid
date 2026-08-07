@@ -16,11 +16,18 @@ class StreamClientService {
   async initialize(user: User) {
     if (this.client) return this.client;
 
+    const userId = user.id ?? "";
+
     this.client = StreamVideoClient.getOrCreateInstance({
       apiKey: STREAM_API_KEY,
-      user,
+      user: {
+        id: userId,
+        name: user.name ?? userId,
+        image: user.image,
+        type: "authenticated",
+      },
       tokenProvider: async () => {
-        const response = await getStreamToken(user.id);
+        const response = await getStreamToken(userId);
 
         return response.token;
       },

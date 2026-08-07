@@ -32,7 +32,7 @@ export async function markAttendance(
     data: any;
   }>("/teacher/attendance", {
     method: "POST",
-    body: JSON.stringify(attendance),
+    body: attendance,
   });
 
   return response.data;
@@ -49,9 +49,9 @@ export async function updateAttendance(
     `/teacher/attendance/${id}`,
     {
       method: "PUT",
-      body: JSON.stringify({
+      body: {
         present,
-      }),
+      },
     }
   );
 

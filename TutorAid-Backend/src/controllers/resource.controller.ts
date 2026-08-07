@@ -4,6 +4,18 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ResourceService } from "../services/resource.service";
 
+/** Safely extract a string query param (handles arrays / ParsedQs). */
+function queryString(req: Request, key: string): string | undefined {
+  const value = req.query[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+/** Safely extract a string route param (handles arrays). */
+function routeParam(req: Request, key: string): string {
+  const value = req.params[key];
+  return typeof value === "string" ? value : "";
+}
+
 export const uploadResource = asyncHandler(
   async (req: Request, res: Response) => {
     const resource =
@@ -23,29 +35,17 @@ export const uploadResource = asyncHandler(
 
 export const getResources = asyncHandler(
   async (req: Request, res: Response) => {
-    const page = Number(req.query.page ?? 1);
+    const page = Number(queryString(req, "page") ?? 1);
+    const limit = Number(queryString(req, "limit") ?? 20);
 
-const limit = Number(req.query.limit ?? 20);
-
-const resources =
-await ResourceService.getResources(
-
-    page,
-
-    limit,
-
-    req.query.subject as string,
-
-    req.query.category as string,
-
-    req.query.q as string
-
-);
-
-return ApiResponse.success(
-    res,
-    resources
-);
+    const resources =
+      await ResourceService.getResources(
+        page,
+        limit,
+        queryString(req, "subject"),
+        queryString(req, "category"),
+        queryString(req, "q")
+      );
 
     return ApiResponse.success(
       res,
@@ -58,7 +58,7 @@ export const getResource = asyncHandler(
   async (req: Request, res: Response) => {
     const resource =
       await ResourceService.getResource(
-        req.params.id
+        routeParam(req, "id")
       );
 
     return ApiResponse.success(
@@ -72,7 +72,7 @@ export const updateResource = asyncHandler(
   async (req: Request, res: Response) => {
     const resource =
       await ResourceService.updateResource(
-        req.params.id,
+        routeParam(req, "id"),
         req.body
       );
 
@@ -87,7 +87,7 @@ export const updateResource = asyncHandler(
 export const deleteResource = asyncHandler(
   async (req: Request, res: Response) => {
     await ResourceService.deleteResource(
-      req.params.id
+      routeParam(req, "id")
     );
 
     return ApiResponse.noContent(res);
@@ -98,7 +98,7 @@ export const searchResources = asyncHandler(
   async (req: Request, res: Response) => {
     const resources =
       await ResourceService.searchResources(
-        req.query.q as string
+        queryString(req, "q") ?? ""
       );
 
     return ApiResponse.success(
@@ -110,10 +110,9 @@ export const searchResources = asyncHandler(
 
 export const getResourcesBySubject = asyncHandler(
   async (req: Request, res: Response) => {
-
     const resources =
       await ResourceService.getResourcesBySubject(
-        req.params.subject
+        routeParam(req, "subject")
       );
 
     return ApiResponse.success(
@@ -125,7 +124,6 @@ export const getResourcesBySubject = asyncHandler(
 
 export const getResourceStats = asyncHandler(
   async (req: Request, res: Response) => {
-
     const stats =
       await ResourceService.getResourceStats();
 

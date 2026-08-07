@@ -17,8 +17,7 @@ interface AuthContextType {
   authenticated: boolean;
 
   initialize: (
-    user: User,
-    token: string
+    user: User
   ) => Promise<void>;
 
   logout: () => Promise<void>;
@@ -38,12 +37,10 @@ export function AuthProvider({
     useState<User | null>(null);
 
   async function initialize(
-    currentUser: User,
-    token: string
+    currentUser: User
   ) {
     await streamClient.initialize(
-      currentUser,
-      token
+      currentUser
     );
 
     setUser(currentUser);

@@ -293,6 +293,7 @@ export async function submitAssignment(
     const {
       student_id,
       file_url,
+      content,
     } = req.body;
 
     // Save submission
@@ -302,6 +303,7 @@ export async function submitAssignment(
         assignment_id: id,
         student_id,
         file_url,
+        content,
         status: "Submitted",
       });
 

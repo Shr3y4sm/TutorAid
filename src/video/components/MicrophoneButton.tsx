@@ -1,11 +1,12 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import {
-  useMicrophoneState,
+  useCallStateHooks,
 } from "@stream-io/video-react-native-sdk";
 
 export default function MicrophoneButton() {
-  const { microphone, isMute } = useMicrophoneState();
+  const { useMicrophoneState } = useCallStateHooks();
+  const { optimisticIsMute, microphone } = useMicrophoneState();
 
   return (
     <TouchableOpacity
@@ -13,7 +14,7 @@ export default function MicrophoneButton() {
       onPress={() => microphone.toggle()}
     >
       <Text style={styles.text}>
-        {isMute ? "Unmute" : "Mute"}
+        {optimisticIsMute ? "Unmute" : "Mute"}
       </Text>
     </TouchableOpacity>
   );

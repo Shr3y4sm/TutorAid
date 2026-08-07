@@ -5,6 +5,8 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 
 import {
@@ -26,6 +28,9 @@ export default function TeacherAttendanceScreen() {
 
   const [loading, setLoading] =
     useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
 
   useEffect(() => {
     load();
@@ -49,36 +54,52 @@ export default function TeacherAttendanceScreen() {
     }
   }
 
-  async function toggle(id: string) {
+  function toggle(id: string) {
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === id
+          ? { ...s, present: !s.present }
+          : s
+      )
+    );
+  }
+
+  function markAllPresent() {
+    setStudents((prev) =>
+      prev.map((s) => ({
+        ...s,
+        present: true,
+      }))
+    );
+  }
+
+  async function saveAttendance() {
     const teacherId =
       await getCurrentTeacherId();
 
-    const updated = students.map((s) =>
-      s.id === id
-        ? {
-            ...s,
-            present: !s.present,
-          }
-        : s
-    );
-
-    setStudents(updated);
-
-    const student =
-      updated.find(
-        (s) => s.id === id
-      );
-
-    if (!student) return;
+    setSaving(true);
 
     try {
-      await markAttendance({
-        id,
-        present: student.present,
-        marked_by: teacherId,
-      });
+      for (const student of students) {
+        await markAttendance({
+          id: student.id,
+          present: student.present,
+          marked_by: teacherId,
+        });
+      }
+
+      Alert.alert(
+        "Success",
+        "Attendance saved successfully."
+      );
     } catch (err) {
       console.log(err);
+      Alert.alert(
+        "Error",
+        "Unable to save attendance."
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -96,23 +117,49 @@ export default function TeacherAttendanceScreen() {
         Attendance
       </Text>
 
+      <Text style={styles.subheading}>
+        Mark students as present or absent
+      </Text>
+
+      <TouchableOpacity
+        style={styles.markAllButton}
+        onPress={markAllPresent}
+      >
+        <Text style={styles.markAllText}>
+          ✓ Mark All Present
+        </Text>
+      </TouchableOpacity>
+
       <FlatList
-  data={students}
-  keyExtractor={(item) => item.id.toString()}
-  ListEmptyComponent={
-    <Text style={styles.empty}>
-      No students found.
-    </Text>
-  }
-  renderItem={({ item }) => (
-    <AttendanceStudentCard
-      name={item.name}
-      rollNo={item.rollNo}
-      present={item.present}
-      onToggle={() => toggle(item.id)}
-    />
-  )}
-/>
+        data={students}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            No students found.
+          </Text>
+        }
+        renderItem={({ item }) => (
+          <AttendanceStudentCard
+            name={item.name}
+            rollNo={item.rollNo}
+            present={item.present}
+            onToggle={() => toggle(item.id)}
+          />
+        )}
+      />
+
+      <TouchableOpacity
+        style={[
+          styles.saveButton,
+          saving && styles.saveButtonDisabled,
+        ]}
+        onPress={saveAttendance}
+        disabled={saving}
+      >
+        <Text style={styles.saveButtonText}>
+          {saving ? "Saving..." : "Save Attendance"}
+        </Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -133,7 +180,29 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 28,
     fontWeight: "700",
-    marginBottom: 20,
+    marginBottom: 4,
+  },
+
+  subheading: {
+    fontSize: 14,
+    color: "#64748B",
+    marginBottom: 16,
+  },
+
+  markAllButton: {
+    backgroundColor: "#EEF2FF",
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#2563EB",
+  },
+
+  markAllText: {
+    color: "#2563EB",
+    fontWeight: "700",
+    fontSize: 15,
   },
 
   empty: {
@@ -141,5 +210,23 @@ const styles = StyleSheet.create({
     marginTop: 40,
     color: "#64748B",
     fontSize: 16,
+  },
+
+  saveButton: {
+    backgroundColor: Colors.primary,
+    padding: 16,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+
+  saveButtonText: {
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });

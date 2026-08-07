@@ -11,9 +11,9 @@ export async function getStreamToken(userId: string) {
     "/stream/token",
     {
       method: "POST",
-      body: JSON.stringify({
+      body: {
         userId,
-      }),
+      },
     }
   );
 }

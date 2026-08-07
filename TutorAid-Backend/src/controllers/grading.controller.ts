@@ -6,6 +6,12 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 import { GradingService } from "../services/grading.service";
 
+/** Safely extract a string route param (handles arrays). */
+function routeParam(req: Request, key: string): string {
+  const value = req.params[key];
+  return typeof value === "string" ? value : "";
+}
+
 export const gradeSubmission =
 asyncHandler(async (
 
@@ -14,7 +20,7 @@ asyncHandler(async (
 
 ) => {
 
-    const { id } = req.params;
+    const id = routeParam(req, "id");
 
     const {
         marks,

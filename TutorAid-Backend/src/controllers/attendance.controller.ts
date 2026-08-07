@@ -4,9 +4,14 @@ import { AttendanceService } from "../services/attendance.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 
+/** Safely extract a string route param (handles arrays). */
+function routeParam(req: Request, key: string): string {
+  const value = req.params[key];
+  return typeof value === "string" ? value : "";
+}
+
 export const markAttendance = asyncHandler(
   async (req: Request, res: Response) => {
-
     const {
       studentId,
       teacherId,
@@ -34,7 +39,6 @@ export const markAttendance = asyncHandler(
 
 export const getAttendanceByDate = asyncHandler(
   async (req: Request, res: Response) => {
-
     const attendanceDate =
       req.query.date as string;
 
@@ -52,10 +56,9 @@ export const getAttendanceByDate = asyncHandler(
 
 export const getStudentAttendance = asyncHandler(
   async (req: Request, res: Response) => {
-
     const attendance =
       await AttendanceService.getStudentAttendance(
-        req.params.id
+        routeParam(req, "id")
       );
 
     return ApiResponse.success(
@@ -67,10 +70,9 @@ export const getStudentAttendance = asyncHandler(
 
 export const updateAttendance = asyncHandler(
   async (req: Request, res: Response) => {
-
     const attendance =
       await AttendanceService.updateAttendance(
-        req.params.id,
+        routeParam(req, "id"),
         req.body.status,
         req.body.remarks
       );
@@ -85,9 +87,8 @@ export const updateAttendance = asyncHandler(
 
 export const deleteAttendance = asyncHandler(
   async (req: Request, res: Response) => {
-
     await AttendanceService.deleteAttendance(
-      req.params.id
+      routeParam(req, "id")
     );
 
     return ApiResponse.noContent(res);
@@ -96,10 +97,9 @@ export const deleteAttendance = asyncHandler(
 
 export const getAttendanceSummary = asyncHandler(
   async (req: Request, res: Response) => {
-
     const summary =
       await AttendanceService.getAttendanceSummary(
-        req.params.id
+        routeParam(req, "id")
       );
 
     return ApiResponse.success(

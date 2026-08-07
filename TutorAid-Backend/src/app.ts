@@ -42,12 +42,17 @@ app.use("/courses", authenticate, courseRoutes);
 app.use("/assignments", authenticate, assignmentRoutes);
 app.use("/attendance", authenticate, attendanceRoutes);
 app.use("/notifications", authenticate, notificationRoutes);
-app.use("/teacher", authenticate, teacherRoutes);
+
+// IMPORTANT: More specific /teacher/* routes must be mounted BEFORE
+// the generic /teacher route. Otherwise Express matches the prefix
+// "/teacher" first and never reaches the sub-routers below.
 app.use("/teacher/students", authenticate, teacherStudentRoutes);
 app.use("/teacher/assignments", authenticate, teacherAssignmentRoutes);
 app.use("/teacher/attendance", authenticate, teacherAttendanceRoutes);
 app.use("/teacher/schedule", authenticate, teacherScheduleRoutes);
 app.use("/teacher/ai", authenticate, teacherAiRoutes);
+app.use("/teacher", authenticate, teacherRoutes);
+
 app.use("/resources", authenticate, router);
 
 app.use(errorMiddleware);

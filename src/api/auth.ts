@@ -55,6 +55,7 @@ export async function registerStudent(
   const response = await api<{
     success: boolean;
     data: any;
+    message?: string;
   }>("/auth/student", {
     method: "POST",
     body: payload,

@@ -68,3 +68,33 @@ export async function getAssignmentStudents(
 
   return response.data;
 }
+export interface TeacherSubmission {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  submitted_at: string;
+  file_url?: string | null;
+  content?: string | null;
+  marks?: number | null;
+  feedback?: string | null;
+  status: string;
+  student: {
+    id: string;
+    full_name: string;
+    class: string;
+    roll_no?: string;
+  };
+}
+
+export async function getAssignmentSubmissions(
+  assignmentId: string
+): Promise<TeacherSubmission[]> {
+  const response = await api<{
+    success: boolean;
+    data: TeacherSubmission[];
+  }>(
+    `/teacher/assignments/${assignmentId}/submissions`
+  );
+
+  return response.data;
+}

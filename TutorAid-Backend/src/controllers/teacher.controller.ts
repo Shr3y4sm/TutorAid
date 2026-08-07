@@ -1,6 +1,14 @@
 import { Request, Response } from "express";
 import supabase from "../config/supabase";
 
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    email: string;
+    role: "teacher" | "student" | "admin";
+  };
+}
+
 /**
  * Map Supabase error codes to HTTP status codes so the client
  * can differentiate between "not found" and "server error".
@@ -38,7 +46,7 @@ function statusCodeFor(err: any): number {
 }
 
 export async function getTeacherDashboard(
-  req: Request,
+  req: AuthRequest,
   res: Response
 ) {
   try {

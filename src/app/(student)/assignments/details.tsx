@@ -7,10 +7,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { Assignment }
+import {
+  Assignment,
+  StudentAssignment,
+}
 from "@/types/assignment";
 import { router, useLocalSearchParams } from "expo-router";
-import { getStudentAssignment } from "@/api/studentAssignments";
+import {
+  getStudentAssignment,
+  getStudentAssignments,
+} from "@/api/studentAssignments";
+import { getCurrentStudentId } from "@/services/studentService";
 
 export default function AssignmentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -18,6 +25,9 @@ export default function AssignmentDetailsScreen() {
   const [loading, setLoading] = useState(true);
  const [assignment, setAssignment] =
     useState<Assignment | null>(null);
+
+  const [studentAssignment, setStudentAssignment] =
+    useState<StudentAssignment | null>(null);
   useEffect(() => {
     loadAssignment();
   }, []);
@@ -26,6 +36,16 @@ export default function AssignmentDetailsScreen() {
     try {
       const data = await getStudentAssignment(id);
       setAssignment(data);
+
+      const studentId = await getCurrentStudentId();
+      const studentAssignments =
+        await getStudentAssignments(studentId);
+      const found = studentAssignments.find(
+        (sa) => sa.assignment.id === id
+      );
+      if (found) {
+        setStudentAssignment(found);
+      }
     } catch (err) {
       console.log(err);
     } finally {
@@ -82,23 +102,107 @@ export default function AssignmentDetailsScreen() {
         </View>
       ) : null}
 
-      <TouchableOpacity
-  style={styles.button}
-  onPress={() =>
-    router.push({
-      pathname:
-        "/(student)/assignments/submit",
-      params: { id },
-    })
-  }
-></TouchableOpacity>
+      {studentAssignment?.status === "Graded" ? (
+        <View style={styles.gradeBox}>
+          <Text style={styles.gradeTitle}>
+            Assignment Graded
+          </Text>
+
+          <Text style={styles.gradeMarks}>
+            Marks: {" "}
+            {studentAssignment.marks ?? 0}/
+            {assignment.max_marks}
+          </Text>
+
+          {studentAssignment.feedback ? (
+            <Text style={styles.gradeFeedback}>
+              Feedback:{" "}
+              {studentAssignment.feedback}
+            </Text>
+          ) : null}
+        </View>
+      ) : studentAssignment?.status === "Submitted" ? (
+        <View style={styles.submittedBox}>
+          <Text style={styles.submittedText}>
+            Submitted
+          </Text>
+          <Text style={styles.pendingText}>
+            Waiting for teacher review
+          </Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() =>
+            router.push({
+              pathname:
+                "/(student)/assignments/submit",
+              params: { id },
+            })
+          }
+        >
+          <Text style={styles.buttonText}>
+            Submit Assignment
+          </Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  gradeBox: {
+    backgroundColor: "#ECFDF5",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#6EE7B7",
+  },
+
+  gradeTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#065F46",
+    marginBottom: 8,
+  },
+
+  gradeMarks: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#065F46",
+    marginBottom: 4,
+  },
+
+  gradeFeedback: {
+    fontSize: 15,
+    color: "#065F46",
+    marginTop: 4,
+  },
+
+  submittedBox: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 14,
+    padding: 16,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+    alignItems: "center",
+  },
+
+  submittedText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#92400E",
+    marginBottom: 4,
+  },
+
+  pendingText: {
+    fontSize: 14,
+    color: "#92400E",
+  },
+
   container: {
-    flex: 1,
     backgroundColor: "#F5F7FB",
     padding: 20,
   },

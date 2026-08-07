@@ -1,11 +1,12 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import {
-  useCameraState,
+  useCallStateHooks,
 } from "@stream-io/video-react-native-sdk";
 
 export default function CameraButton() {
-  const { isCameraEnabled, camera } = useCameraState();
+  const { useCameraState } = useCallStateHooks();
+  const { isMute, camera } = useCameraState();
 
   return (
     <TouchableOpacity
@@ -13,7 +14,7 @@ export default function CameraButton() {
       onPress={() => camera.toggle()}
     >
       <Text style={styles.text}>
-        {isCameraEnabled ? "Camera Off" : "Camera On"}
+        {isMute ? "Camera Off" : "Camera On"}
       </Text>
     </TouchableOpacity>
   );

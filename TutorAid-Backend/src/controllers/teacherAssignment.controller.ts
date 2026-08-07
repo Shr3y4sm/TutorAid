@@ -2,6 +2,12 @@ import { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import supabase from "../config/supabase";
 import { AssignmentService } from "../services/assignment.service";
+
+/** Safely extract a string route param (handles arrays). */
+function routeParam(req: Request, key: string): string {
+  const value = req.params[key];
+  return typeof value === "string" ? value : "";
+}
 export async function getTeacherAssignments(
   req: Request,
   res: Response
@@ -125,7 +131,7 @@ export async function updateAssignment(
     const assignment =
       await AssignmentService
         .updateAssignment(
-          req.params.id,
+          routeParam(req, "id"),
           req.body
         );
 
@@ -154,7 +160,7 @@ export async function deleteAssignment(
   try {
 
     await AssignmentService
-      .deleteAssignment(req.params.id);
+      .deleteAssignment(routeParam(req, "id"));
 
     return res.json({
       success: true,
@@ -180,7 +186,7 @@ export async function getAssignmentStudents(
     const data =
       await AssignmentService
         .getAssignmentStudents(
-          req.params.id
+          routeParam(req, "id")
         );
 
     return res.json({
@@ -197,4 +203,26 @@ export async function getAssignmentStudents(
 
   }
 
+}
+export async function getAssignmentSubmissions(
+  req: Request,
+  res: Response
+) {
+  try {
+    const data =
+      await AssignmentService
+        .getAssignmentSubmissions(
+          routeParam(req, "id")
+        );
+
+    return res.json({
+      success: true,
+      data,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 }

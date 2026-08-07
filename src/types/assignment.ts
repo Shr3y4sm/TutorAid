@@ -45,6 +45,8 @@ export interface AssignmentSubmission {
 
   file_url?: string | null;
 
+  content?: string | null;
+
   marks?: number | null;
 
   feedback?: string | null;

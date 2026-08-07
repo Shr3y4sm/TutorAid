@@ -31,7 +31,7 @@ export async function createStudent(
     data: TeacherStudent;
   }>("/teacher/students", {
     method: "POST",
-    body: JSON.stringify(student),
+    body: student,
   });
 
   return response.data;
@@ -65,7 +65,7 @@ export async function updateStudent(
     data: TeacherStudent;
   }>(`/teacher/students/${id}`, {
     method: "PUT",
-    body: JSON.stringify(student),
+    body: student,
   });
 
   return response.data;

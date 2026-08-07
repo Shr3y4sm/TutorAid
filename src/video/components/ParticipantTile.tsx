@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  StreamVideoParticipantView,
+  ParticipantView,
 } from "@stream-io/video-react-native-sdk";
 
 export default function ParticipantTile({
   participant,
 }: any) {
   return (
-    <StreamVideoParticipantView participant={participant} />
+    <ParticipantView participant={participant} />
   );
 }

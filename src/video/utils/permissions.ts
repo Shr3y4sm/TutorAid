@@ -1,16 +1,14 @@
-import { Camera } from "expo-camera";
-import { Audio } from "expo-av";
+// Video module is currently deferred.
+// The Stream video call feature is not active yet, so we provide
+// a no-op permission helper instead of importing camera/audio
+// packages that are not installed.
+//
+// When video is re-enabled, install `expo-camera` and use its
+// permission API during the CallProvider initialization.
 
 export async function requestPermissions() {
-  const camera = await Camera.requestCameraPermissionsAsync();
-
-  const microphone = await Audio.requestPermissionsAsync();
-
   return {
-    camera:
-      camera.status === "granted",
-
-    microphone:
-      microphone.status === "granted",
+    camera: false,
+    microphone: false,
   };
 }
