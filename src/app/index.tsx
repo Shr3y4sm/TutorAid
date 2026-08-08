@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Text } from "react-native";
 import { router } from "expo-router";
 
 import supabase from "@/config/supabase";
@@ -11,42 +11,49 @@ export default function Index() {
   }, []);
 
   async function start() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    if (!session) {
-      router.replace("/(auth)/login");
-      return;
-    }
-
-    const status = await getAuthStatus(
-      session.user.id
-    );
-
-    if (!status.success) {
-      router.replace("/(auth)/role-selection");
-      return;
-    }
-
-    if (!status.role) {
-      router.replace("/(auth)/role-selection");
-      return;
-    }
-
-    if (!status.profileExists) {
-      if (status.role === "teacher") {
-        router.replace("/(auth)/teacher-profile");
-      } else {
-        router.replace("/(auth)/student-profile");
+      if (!session) {
+        router.replace("/(auth)/login");
+        return;
       }
-      return;
-    }
 
-    if (status.role === "teacher") {
-      router.replace("/(teacher)/dashboard");
-    } else {
-      router.replace("/(student)/home");
+      const status = await getAuthStatus(
+        session.user.id
+      );
+
+      if (!status.success) {
+        router.replace("/(auth)/role-selection");
+        return;
+      }
+
+      if (!status.role) {
+        router.replace("/(auth)/role-selection");
+        return;
+      }
+
+      if (!status.profileExists) {
+        if (status.role === "teacher") {
+          router.replace("/(auth)/teacher-profile");
+        } else {
+          router.replace("/(auth)/student-profile");
+        }
+        return;
+      }
+
+      if (status.role === "teacher") {
+        router.replace("/(teacher)/dashboard");
+      } else {
+        router.replace("/(student)/home");
+      }
+    } catch (err) {
+      // If backend is unreachable, fall back to login gracefully
+      // instead of crashing the app.
+      console.error("Auth status check failed:", err);
+      router.replace("/(auth)/login");
     }
   }
 

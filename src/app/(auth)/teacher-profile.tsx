@@ -23,9 +23,13 @@ export default function TeacherProfileScreen() {
     useState("");
 
   async function saveTeacher() {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    let user: any = null;
+    try {
+      const res = await supabase.auth.getUser();
+      user = res?.data?.user;
+    } catch (err) {
+      console.error(err);
+    }
 
     if (!user) {
       Alert.alert("Please login again.");

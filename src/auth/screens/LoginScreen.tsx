@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { signIn } from "@/services/authService";
 import { getAuthStatus } from "@/api/auth";
+
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,55 +21,55 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email || !password) {
+      Alert.alert("Missing Fields", "Please enter email and password.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const { data, error } = await signIn(
-  email,
-  password
-);
+      const { data, error } = await signIn(email, password);
 
-if (error) {
-  throw error;
-}
+      if (error) {
+        throw error;
+      }
 
-if (!data.session) {
-  throw new Error("No session created.");
-}
+      if (!data.session) {
+        throw new Error("No session created.");
+      }
 
+      const status = await getAuthStatus(data.session.user.id);
 
+      if (!status.success) {
+        router.replace("/(auth)/role-selection");
+        return;
+      }
 
-const status = await getAuthStatus(
-  data.session.user.id
-);
+      if (!status.role) {
+        router.replace("/(auth)/role-selection");
+        return;
+      }
 
-if (!status.success) {
-  router.replace("/(auth)/role-selection");
-  return;
-}
+      if (!status.profileExists) {
+        if (status.role === "teacher") {
+          router.replace("/(auth)/teacher-profile");
+        } else {
+          router.replace("/(auth)/student-profile");
+        }
+        return;
+      }
 
-if (!status.role) {
-  router.replace("/(auth)/role-selection");
-  return;
-}
-
-if (!status.profileExists) {
-  if (status.role === "teacher") {
-    router.replace("/(auth)/teacher-profile");
-  } else {
-    router.replace("/(auth)/student-profile");
-  }
-  return;
-}
-
-if (status.role === "teacher") {
-  router.replace("/(teacher)/dashboard");
-} else {
-  router.replace("/(student)/home");
-}
+      if (status.role === "teacher") {
+        router.replace("/(teacher)/dashboard");
+      } else {
+        router.replace("/(student)/home");
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      Alert.alert(
+        "Login Failed",
+        err?.message ?? "Unable to login. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -89,6 +91,7 @@ if (status.role === "teacher") {
           placeholderTextColor="#888"
           style={styles.input}
           autoCapitalize="none"
+          keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
@@ -105,12 +108,23 @@ if (status.role === "teacher") {
         <TouchableOpacity
           style={styles.button}
           onPress={handleLogin}
+          disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
             <Text style={styles.buttonText}>Login</Text>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.registerLink}
+          onPress={() => router.push("/(auth)/register")}
+        >
+          <Text style={styles.registerText}>
+            Don't have an account?{" "}
+            <Text style={styles.registerBold}>Register</Text>
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -169,5 +183,20 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 18,
     fontWeight: "600",
+  },
+
+  registerLink: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+
+  registerText: {
+    color: "#64748B",
+    fontSize: 15,
+  },
+
+  registerBold: {
+    color: "#2563EB",
+    fontWeight: "700",
   },
 });

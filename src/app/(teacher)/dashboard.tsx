@@ -70,7 +70,7 @@ export default function TeacherDashboard() {
         return;
       }
 
-      setError(err.message);
+      setError(err?.message ?? "Unable to load dashboard.");
     } finally {
       setLoading(false);
     }
@@ -95,10 +95,22 @@ export default function TeacherDashboard() {
             color: "red",
             fontSize: 20,
             fontWeight: "700",
+            textAlign: "center",
+            paddingHorizontal: 24,
           }}
         >
           {error}
         </Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError("");
+            load();
+          }}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -111,6 +123,12 @@ export default function TeacherDashboard() {
     );
   }
 
+  const teacher = dashboard.teacher ?? {};
+  const stats = dashboard.stats ?? {};
+  const quickActions = dashboard.quickActions ?? [];
+  const todayClasses = dashboard.todayClasses ?? [];
+  const recentActivity = dashboard.recentActivity ?? [];
+
   return (
     <ScrollView
       style={styles.container}
@@ -121,11 +139,11 @@ export default function TeacherDashboard() {
       </Text>
 
       <Text style={styles.name}>
-        {dashboard.teacher.name}
+        {teacher.name ?? "Teacher"}
       </Text>
 
       <Text style={styles.subject}>
-        {dashboard.teacher.subject}
+        {teacher.subject ?? ""}
       </Text>
       {/* Teacher Code */}
 
@@ -135,7 +153,7 @@ export default function TeacherDashboard() {
         </Text>
 
         <Text style={styles.code}>
-          {dashboard.teacher.teacherCode}
+          {teacher.teacherCode ?? "-"}
         </Text>
 
         <View style={styles.codeButtons}>
@@ -143,7 +161,7 @@ export default function TeacherDashboard() {
             style={styles.codeButton}
             onPress={async () => {
               await Clipboard.setStringAsync(
-                dashboard.teacher.teacherCode
+                teacher.teacherCode ?? ""
               );
             }}
           >
@@ -157,7 +175,7 @@ export default function TeacherDashboard() {
             onPress={() =>
               Share.share({
                 message:
-                  `Join my TutorAid classroom!\n\nTeacher Code: ${dashboard.teacher.teacherCode}`,
+                  `Join my TutorAid classroom!\n\nTeacher Code: ${teacher.teacherCode ?? ""}`,
               })
             }
           >
@@ -173,12 +191,12 @@ export default function TeacherDashboard() {
       <View style={styles.stats}>
         <TeacherStatCard
           title="Today's Classes"
-          value={dashboard.stats.todayClasses}
+          value={stats.todayClasses ?? 0}
         />
 
         <TeacherStatCard
           title="Students"
-          value={dashboard.stats.totalStudents}
+          value={stats.totalStudents ?? 0}
         />
       </View>
 
@@ -186,13 +204,13 @@ export default function TeacherDashboard() {
         <TeacherStatCard
           title="Assignments"
           value={
-            dashboard.stats.pendingAssignments
+            stats.pendingAssignments ?? 0
           }
         />
 
         <TeacherStatCard
           title="Attendance"
-          value={`${dashboard.stats.attendanceToday}%`}
+          value={`${stats.attendanceToday ?? 0}%`}
         />
       </View>
 
@@ -203,7 +221,7 @@ export default function TeacherDashboard() {
       </Text>
 
       <View style={styles.actions}>
-        {dashboard.quickActions.map((item) => (
+        {quickActions.map((item: any) => (
           <TeacherQuickAction
             key={item.id}
             title={item.title}
@@ -251,7 +269,7 @@ export default function TeacherDashboard() {
         Today's Classes
       </Text>
 
-      {dashboard.todayClasses.map((item) => (
+      {todayClasses.map((item: any) => (
         <TeacherClassCard
           key={item.id}
           {...item}
@@ -264,7 +282,7 @@ export default function TeacherDashboard() {
         Recent Activity
       </Text>
 
-      {dashboard.recentActivity.map((item) => (
+      {recentActivity.map((item: any) => (
         <TeacherActivityCard
           key={item.id}
           text={item.text}
@@ -359,5 +377,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+  },
+
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+
+  retryText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

@@ -55,7 +55,7 @@ export default function StudentsScreen() {
 
   const filtered = useMemo(() => {
     return students.filter((student) =>
-      student.full_name
+      (student.full_name ?? "")
         .toLowerCase()
         .includes(search.toLowerCase())
     );
@@ -119,8 +119,13 @@ export default function StudentsScreen() {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
-          await deleteStudent(item.id);
-          loadStudents();
+          try {
+            await deleteStudent(item.id);
+            loadStudents();
+          } catch (err) {
+            console.error(err);
+            Alert.alert("Error", "Unable to delete student.");
+          }
         },
       },
     ]

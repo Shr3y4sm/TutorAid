@@ -41,9 +41,9 @@ export default function AssignmentDetailsScreen() {
 
       const studentId = await getCurrentStudentId();
       const studentAssignments =
-        await getStudentAssignments(studentId);
+        await getStudentAssignments(studentId) ?? [];
       const found = studentAssignments.find(
-        (sa) => sa.assignment.id === id
+        (sa) => sa.assignment?.id === id
       );
       if (found) {
         setStudentAssignment(found);

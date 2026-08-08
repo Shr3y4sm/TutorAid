@@ -26,7 +26,7 @@ export default function StudentAssignmentsScreen() {
     try {
       const studentId = await getCurrentStudentId();
       const data = await getStudentAssignments(studentId);
-      setAssignments(data);
+      setAssignments(data ?? []);
     } catch (err) {
       console.log(err);
     } finally {

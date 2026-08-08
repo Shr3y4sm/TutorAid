@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, StyleSheet } from "react-native";
+import {
+  ScrollView,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  View,
+  TouchableOpacity,
+} from "react-native";
 
 import Header from "@/features/student/components/dashboard/Header";
 import AttendanceCard from "@/features/student/components/dashboard/AttendanceCard";
@@ -12,25 +19,51 @@ import { getCurrentStudentId } from "@/services/studentService";
 
 export default function HomeScreen() {
   const [dashboard, setDashboard] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadDashboard();
   }, []);
 
   async function loadDashboard() {
+    setLoading(true);
+    setError("");
     try {
       const studentId = await getCurrentStudentId();
 
-      const data =
-        await getStudentDashboard(studentId);
+      const data = await getStudentDashboard(studentId);
 
       setDashboard(data);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err?.message ?? "Unable to load dashboard.");
+    } finally {
+      setLoading(false);
     }
   }
 
-  if (!dashboard) return null;
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#2563EB" />
+        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+      </View>
+    );
+  }
+
+  if (error || !dashboard) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>
+          {error || "No dashboard data available."}
+        </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadDashboard}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -38,8 +71,8 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Header
-        name={dashboard.student.full_name}
-        subtitle={`Semester ${dashboard.student.semester ?? "-"}`}
+        name={dashboard.student?.full_name ?? "Student"}
+        subtitle={`Semester ${dashboard.student?.semester ?? "-"}`}
       />
 
       <AttendanceCard
@@ -56,7 +89,7 @@ export default function HomeScreen() {
         Today's Classes
       </Text>
 
-      {dashboard.todaysClasses.map((item: any) => (
+      {(dashboard.todaysClasses ?? []).map((item: any) => (
         <ClassCard
           key={item.id}
           subject={item.subject}
@@ -70,7 +103,7 @@ export default function HomeScreen() {
         Announcements
       </Text>
 
-      {dashboard.announcements.map((item: any) => (
+      {(dashboard.announcements ?? []).map((item: any) => (
         <AnnouncementCard
           key={item.id}
           title={item.title}
@@ -97,5 +130,39 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: "#111827",
+  },
+
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F7FB",
+    padding: 24,
+  },
+
+  loadingText: {
+    marginTop: 12,
+    color: "#6B7280",
+    fontSize: 16,
+  },
+
+  errorText: {
+    color: "#EF4444",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+
+  retryButton: {
+    backgroundColor: "#2563EB",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+
+  retryText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

@@ -3,9 +3,10 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   Alert,
   StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { router } from "expo-router";
 
@@ -17,6 +18,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] =
     useState("");
+  const [loading, setLoading] = useState(false);
 
   async function register() {
     if (!fullName.trim()) {
@@ -45,26 +47,43 @@ export default function RegisterScreen() {
       return;
     }
 
-    const { error } = await signUp(
-      fullName,
-      email,
-      password
-    );
+    setLoading(true);
 
-    if (error) {
+    try {
+      const { error } = await signUp(
+        fullName,
+        email,
+        password
+      );
+
+      if (error) {
+        Alert.alert(
+          "Registration Failed",
+          error.message
+        );
+        return;
+      }
+
+      Alert.alert(
+        "Success",
+        "Account created successfully.",
+        [
+          {
+            text: "OK",
+            onPress: () =>
+              router.replace("/(auth)/role-selection"),
+          },
+        ]
+      );
+    } catch (err: any) {
+      console.error("Register error:", err);
       Alert.alert(
         "Registration Failed",
-        error.message
+        err?.message ?? "Unable to create account. Please try again."
       );
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    Alert.alert(
-      "Success",
-      "Account created successfully."
-    );
-
-    router.replace("/(auth)/role-selection");
   }
 
   return (
@@ -103,10 +122,29 @@ export default function RegisterScreen() {
         style={styles.input}
       />
 
-      <Button
-        title="Create Account"
+      <TouchableOpacity
+        style={styles.button}
         onPress={register}
-      />
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={styles.buttonText}>
+            Create Account
+          </Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.loginLink}
+        onPress={() => router.replace("/(auth)/login")}
+      >
+        <Text style={styles.loginText}>
+          Already have an account?{" "}
+          <Text style={styles.loginBold}>Login</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -116,19 +154,52 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 24,
+    backgroundColor: "#F8FAFC",
   },
 
   title: {
     fontSize: 30,
     fontWeight: "700",
     marginBottom: 24,
+    color: "#111827",
   },
 
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
     padding: 14,
     marginBottom: 16,
+    backgroundColor: "#FFF",
+    fontSize: 16,
+  },
+
+  button: {
+    backgroundColor: "#2563EB",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  buttonText: {
+    color: "#FFF",
+    fontSize: 17,
+    fontWeight: "700",
+  },
+
+  loginLink: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+
+  loginText: {
+    color: "#64748B",
+    fontSize: 15,
+  },
+
+  loginBold: {
+    color: "#2563EB",
+    fontWeight: "700",
   },
 });

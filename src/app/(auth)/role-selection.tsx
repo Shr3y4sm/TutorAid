@@ -13,9 +13,14 @@ import { currentSession } from "@/services/authService";
 export default function RoleSelectionScreen() {
   useEffect(() => {
     async function checkSession() {
-      const { data } = await currentSession();
+      try {
+        const { data } = await currentSession();
 
-      if (!data.session) {
+        if (!data?.session) {
+          router.replace("/(auth)/login");
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
         router.replace("/(auth)/login");
       }
     }

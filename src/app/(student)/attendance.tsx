@@ -49,8 +49,17 @@ export default function AttendanceScreen() {
         getStudentAttendance(studentId),
       ]);
 
-      setSummary(summaryData);
-      setAttendance(attendanceData);
+      setSummary(
+        summaryData ?? {
+          total: 0,
+          present: 0,
+          absent: 0,
+          late: 0,
+          leave: 0,
+          percentage: 0,
+        }
+      );
+      setAttendance(attendanceData ?? []);
     } catch (err) {
       console.error(err);
       setError("Failed to load attendance.");

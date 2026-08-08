@@ -73,7 +73,14 @@ export async function api<T>(
 
     clearTimeout(timeout);
 
-    const json = await response.json();
+    // Handle non-JSON responses gracefully (e.g. empty body, HTML error pages)
+    const text = await response.text();
+    let json: any = {};
+    try {
+      json = text ? JSON.parse(text) : {};
+    } catch {
+      json = {};
+    }
 
     if (!response.ok) {
       throw new ApiError(
@@ -82,7 +89,7 @@ export async function api<T>(
       );
     }
 
-    return json;
+    return json as T;
   } finally {
     clearTimeout(timeout);
   }
