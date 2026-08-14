@@ -10,8 +10,8 @@ if (
   typeof globalThis.WebSocket ===
   "undefined"
 ) {
-  // Try to get WebSocket from global object
-  const ws = global?.WebSocket || (typeof WebSocket !== 'undefined' ? WebSocket : undefined);
+  // Try to get WebSocket from globalThis
+  const ws = (globalThis as any)?.WebSocket || (typeof WebSocket !== 'undefined' ? WebSocket : undefined);
   
   if (ws) {
     globalThis.WebSocket = ws;

@@ -1,36 +1,24 @@
-import { View, Text, StyleSheet } from "react-native";
+import React from "react";
+import { useLocalSearchParams } from "expo-router";
+import { VideoCallScreen } from "@/features/video-call";
 
-export default function CallScreen() {
+export default function CallRoute() {
+  const params = useLocalSearchParams<{
+    classname?: string;
+    username?: string;
+  }>();
+
+  const classname = Array.isArray(params.classname)
+    ? params.classname[0]
+    : params.classname;
+  const username = Array.isArray(params.username)
+    ? params.username[0]
+    : params.username;
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Video Module Deferred
-      </Text>
-
-      <Text style={styles.subtitle}>
-        Stream Video will be enabled after the rest of TutorAid is complete.
-      </Text>
-    </View>
+    <VideoCallScreen
+      classname={String(classname ?? "")}
+      username={String(username ?? "unknown")}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-    color: "#64748B",
-  },
-});

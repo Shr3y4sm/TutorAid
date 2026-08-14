@@ -3,24 +3,30 @@ import { Ionicons } from "@expo/vector-icons";
 export const quickActions = [
   {
     id: "1",
+    title: "Join Class",
+    icon: "videocam-outline",
+    color: "#EF4444",
+  },
+  {
+    id: "2",
     title: "Courses",
     icon: "book-outline",
     color: "#2563EB",
   },
   {
-    id: "2",
+    id: "3",
     title: "Assignments",
     icon: "document-text-outline",
     color: "#10B981",
   },
   {
-    id: "3",
+    id: "4",
     title: "AI Tutor",
     icon: "sparkles-outline",
     color: "#8B5CF6",
   },
   {
-    id: "4",
+    id: "5",
     title: "Schedule",
     icon: "calendar-outline",
     color: "#F59E0B",

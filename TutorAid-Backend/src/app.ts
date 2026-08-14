@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 
-import streamRoutes from "./routes/stream.routes";
 import studentRoutes from "./routes/student.routes";
 import courseRoutes from "./routes/course.routes";
 import assignmentRoutes from "./routes/assignment.routes";
@@ -15,7 +14,6 @@ import teacherScheduleRoutes from "./routes/teacherSchedule.routes";
 import teacherAiRoutes from "./routes/teacherAi.routes";
 import authRoutes from "./routes/auth.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
-import { getResourceStats } from "./controllers/resource.controller";
 import router from "./routes/resource.routes";
 import { authenticate } from "./middleware/auth.middleware";
 
@@ -36,7 +34,6 @@ app.get("/health", (_req, res) => {
 app.use("/auth", authRoutes);
 
 // Protected routes (authentication required)
-app.use("/stream", authenticate, streamRoutes);
 app.use("/student", authenticate, studentRoutes);
 app.use("/courses", authenticate, courseRoutes);
 app.use("/assignments", authenticate, assignmentRoutes);

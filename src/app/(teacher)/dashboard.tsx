@@ -228,6 +228,16 @@ export default function TeacherDashboard() {
             icon={item.icon as any}
             onPress={() => {
               switch (item.title) {
+                case "Start Class":
+                  router.push({
+                    pathname: "/(video)/call",
+                    params: {
+                      classname: teacher.teacherCode ?? "classroom",
+                      username: teacher.name ?? "Teacher",
+                    },
+                  });
+                  break;
+
                 case "Students":
                   router.push(
                     "/(teacher)/students"
