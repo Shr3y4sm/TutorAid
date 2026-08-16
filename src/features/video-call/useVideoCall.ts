@@ -28,7 +28,7 @@ let RTCIceCandidate: any = null;
 let MediaStreamCtor: any = null;
 
 if (!isWeb) {
-  const WebRTCModule = require('react-native-webrtc');
+  const WebRTCModule = require('@stream-io/react-native-webrtc');
   RTCView = WebRTCModule.RTCView;
   mediaDevices = WebRTCModule.mediaDevices;
   RTCPeerConnection = WebRTCModule.RTCPeerConnection;
@@ -715,9 +715,14 @@ export function useVideoCall({
       // Process queued offers
       const queued = pendingOffersRef.current.splice(0);
       queued.forEach(({ sender, sdp }) => { handleRemoteOffer({ sender, sdp }); });
-      // Make offers to all existing participants
+      // Make offers to all existing participants.
+      // Use "polite peer" pattern: only the user with the alphabetically
+      // smaller username makes the offer. This prevents glare when both
+      // users join simultaneously.
       userList.forEach((otherUser) => {
-        if (otherUser !== currentUser) makeOffer(otherUser);
+        if (otherUser !== currentUser && currentUser < otherUser) {
+          makeOffer(otherUser);
+        }
       });
     });
 
@@ -725,7 +730,10 @@ export function useVideoCall({
       const newUser = body?.username;
       if (typeof newUser === 'string' && newUser !== currentUser) {
         setJoinedUsers((users) => [...users.filter((u) => u !== newUser), newUser]);
-        makeOffer(newUser);
+        // Only make an offer if we are the "polite" peer (alphabetically smaller)
+        if (currentUser < newUser) {
+          makeOffer(newUser);
+        }
       }
     });
 

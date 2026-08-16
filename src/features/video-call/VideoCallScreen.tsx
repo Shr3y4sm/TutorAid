@@ -12,9 +12,10 @@
  * The component handles everything: WebRTC, signalling, reconnection,
  * screen sharing, chat, hand raising, and UI.
  */
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useVideoCall } from './useVideoCall';
 import { VideoTile } from './components/VideoTile';
 import { ControlsBar } from './components/ControlsBar';
@@ -40,6 +41,27 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
   autoJoin = true,
 }) => {
   const v = useVideoCall({ classname, username, serverUrl, iceServers, autoJoin });
+
+  // ---- Set local video srcObject when stream becomes available (web) ----
+  useEffect(() => {
+    if (v.isWeb && v.localStream && v.localVideoRef.current) {
+      v.localVideoRef.current.srcObject = v.localStream;
+      v.localVideoRef.current.muted = true;
+    }
+  }, [v.localStream, v.isWeb]);
+
+  // ---- End call: cleanup + navigate back ----
+  const handleEndCall = () => {
+    v.endCall();
+    // Navigate back to the previous screen (dashboard/home)
+    setTimeout(() => {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
+    }, 300);
+  };
 
   // ---- Error overlay ----
   if (v.error) {
@@ -150,7 +172,7 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
             onScreenShare={v.toggleScreenShare}
             onHandRaise={v.toggleHandRaise}
             onParticipants={v.openParticipants}
-            onEndCall={v.endCall}
+            onEndCall={handleEndCall}
             onSwitchCamera={v.switchCamera}
             cameraDirection={v.cameraDirection}
           />
@@ -282,8 +304,8 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
           onScreenShare={v.toggleScreenShare}
           onHandRaise={v.toggleHandRaise}
           onParticipants={v.openParticipants}
-          onEndCall={v.endCall}
-        />
+            onEndCall={handleEndCall}
+          />
 
         <ParticipantsModal
           visible={v.isParticipantsVisible}

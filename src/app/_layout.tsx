@@ -1,3 +1,7 @@
+// Import polyfills FIRST so requireNativeComponent is available
+// before any library (e.g. react-native-webrtc) tries to use it.
+import "@/polyfills";
+
 import { Stack } from "expo-router";
 import {
   DarkTheme,

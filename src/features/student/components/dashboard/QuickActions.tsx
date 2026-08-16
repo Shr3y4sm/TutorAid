@@ -8,13 +8,7 @@ export default function QuickActions() {
   function navigate(title: string) {
     switch (title) {
       case "Join Class":
-        router.push({
-          pathname: "/(video)/call",
-          params: {
-            classname: "classroom",
-            username: "Student",
-          },
-        });
+        router.push("/(student)/join-class" as any);
         break;
 
       case "Courses":

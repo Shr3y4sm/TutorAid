@@ -57,8 +57,8 @@ export const VideoTile: React.FC<VideoTileProps> = ({
     );
   }
 
-  // Native (React Native + react-native-webrtc)
-  const { RTCView } = require('react-native-webrtc');
+  // Native (React Native + @stream-io/react-native-webrtc)
+  const { RTCView } = require('@stream-io/react-native-webrtc');
   return (
     <View style={tileStyle}>
       <RTCView

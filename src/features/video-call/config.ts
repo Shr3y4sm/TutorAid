@@ -55,10 +55,11 @@ export const videoCallConfig: VideoCallConfig = {
  *   4. Default localhost
  */
 function resolveSignalingUrl(): string {
-  // 1. Expo constants override
-  const fromConstants = (Constants?.expoConfig?.extra as any)?.signalingUrl as
-    | string
-    | undefined;
+  // 1. Expo constants override (supports both camelCase and UPPER_CASE)
+  const extra = (Constants?.expoConfig?.extra as any) || {};
+  const fromConstants =
+    (extra.signalingUrl as string | undefined) ||
+    (extra.SIGNALING_URL as string | undefined);
   if (fromConstants) return fromConstants;
 
   // 2. Env var override (works in EAS builds and dev)
