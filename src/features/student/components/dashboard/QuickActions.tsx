@@ -7,6 +7,10 @@ import { quickActions } from "../../constants/quickActions";
 export default function QuickActions() {
   function navigate(title: string) {
     switch (title) {
+      case "Join Class":
+        router.push("/(student)/join-class" as any);
+        break;
+
       case "Courses":
         router.push("/(student)/courses");
         break;
@@ -20,7 +24,7 @@ export default function QuickActions() {
         break;
 
       case "Schedule":
-        alert("Schedule coming soon!");
+        router.push("/(student)/schedule");
         break;
     }
   }

@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "signalling": "node signalling-server/index.js"
   },
   "dependencies": {
-    "@stream-io/node-sdk": "^0.7.62",
     "@supabase/supabase-js": "^2.110.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",

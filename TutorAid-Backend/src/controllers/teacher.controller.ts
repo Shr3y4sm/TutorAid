@@ -70,7 +70,7 @@ export async function getTeacherDashboard(
         .from("teachers")
         .select("id, full_name, subjects, teacher_code")
         .eq("auth_user_id", authUserId)
-        .single();
+        .maybeSingle();
 
     if (teacherError) {
       return res.status(statusCodeFor(teacherError)).json({
@@ -186,11 +186,12 @@ export async function getTeacherDashboard(
         },
 
         quickActions: [
-          { id: 1, title: "Students",    icon: "people" },
-          { id: 2, title: "Assignments",  icon: "document-text" },
-          { id: 3, title: "Attendance",   icon: "checkmark-circle" },
-          { id: 4, title: "Schedule",     icon: "calendar" },
-          { id: 5, title: "AI Assistant",  icon: "sparkles" },
+          { id: 1, title: "Start Class", icon: "videocam" },
+          { id: 2, title: "Students",    icon: "people" },
+          { id: 3, title: "Assignments",  icon: "document-text" },
+          { id: 4, title: "Attendance",   icon: "checkmark-circle" },
+          { id: 5, title: "Schedule",     icon: "calendar" },
+          { id: 6, title: "AI Assistant",  icon: "sparkles" },
         ],
 
         todayClasses: classes.map((c: any) => ({
