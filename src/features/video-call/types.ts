@@ -61,6 +61,18 @@ export interface ScreenShareDeniedBody {
   reason?: string;
 }
 
+/** Body of the `screen_share_request` message (server → teacher only). */
+export interface ScreenShareRequestBody {
+  username: string; // the student requesting permission
+}
+
+/** Body of the `screen_share_grant` message (teacher → server). */
+export interface ScreenShareGrantBody {
+  target: string;
+  granted: boolean;
+  reason?: string;
+}
+
 /** Body of the `hand_raise_state` message. */
 export interface HandRaiseStateBody {
   raisedHands: string[];
@@ -127,8 +139,10 @@ export interface ControlsBarProps {
   isCameraOff: boolean;
   isScreenSharing: boolean;
   isHandRaised: boolean;
-  screenShareAvailable: boolean;
+    screenShareAvailable: boolean;
   screenShareDisabledByPeer: boolean;
+  /** A student's request is awaiting teacher approval. */
+  screenSharePending: boolean;
   unreadCount: number;
   onMute: () => void;
   onCamera: () => void;

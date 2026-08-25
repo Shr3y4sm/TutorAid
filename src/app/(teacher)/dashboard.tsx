@@ -15,7 +15,10 @@ import { router } from "expo-router";
 import Colors from "@/theme/colors";
 
 import { getTeacherDashboard } from "@/api/teacher";
+import { startMeeting } from "@/api/meetings";
 import { ApiError } from "@/api/client";
+
+import { getCurrentTeacherId } from "@/services/teacherService";
 
 import {
   TeacherDashboardData,
@@ -226,17 +229,48 @@ export default function TeacherDashboard() {
             key={item.id}
             title={item.title}
             icon={item.icon as any}
-            onPress={() => {
+            onPress={async () => {
               switch (item.title) {
-                case "Start Class":
-                  router.push({
-                    pathname: "/(video)/call",
-                    params: {
-                      classname: teacher.teacherCode ?? "classroom",
-                      username: teacher.name ?? "Teacher",
-                    },
-                  });
+                case "Start Class": {
+                  const teacherId = await getCurrentTeacherId();
+                  try {
+                    const meeting = await startMeeting({
+                      teacher_id: teacherId,
+                      subject: teacher.subject ?? "Live Class",
+                    });
+
+                    router.push({
+                      pathname: "/(video)/call",
+                      params: {
+                        classname: meeting.meet_code,
+                        username: teacher.name ?? "Teacher",
+                        role: "teacher",
+                        entityId: teacherId,
+                      },
+                    });
+                  } catch (err) {
+                    console.warn(
+                      "Meeting session could not be created — " +
+                        "starting video call without attendance tracking.",
+                      err
+                    );
+                    // Graceful fallback: if the /meetings backend or DB tables
+                    // aren't available yet, still start the video call using
+                    // the teacher's existing code so the app keeps working.
+                    // Attendance auto-marking simply won't happen this session.
+                    router.push({
+                      pathname: "/(video)/call",
+                      params: {
+                        classname:
+                          teacher.teacherCode ?? teacherId,
+                        username: teacher.name ?? "Teacher",
+                        role: "teacher",
+                        entityId: teacherId,
+                      },
+                    });
+                  }
                   break;
+                }
 
                 case "Students":
                   router.push(

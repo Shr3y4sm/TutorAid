@@ -296,21 +296,43 @@ export async function submitAssignment(
       content,
     } = req.body;
 
-    // Save submission
-    // If content (text answer) is provided, store it in file_url
-    // since the assignment_submissions table doesn't have a content column
-    const submissionFileUrl = content
-      ? content
-      : file_url;
+    // Store the uploaded file URL and the typed text answer SEPARATELY so
+    // the teacher can review both. Previously the text overwrote file_url,
+    // which meant an attached file was lost whenever an answer was typed.
+    const payload: Record<string, unknown> = {
+      assignment_id: id,
+      student_id,
+      file_url: file_url ?? null,
+      status: "Submitted",
+    };
 
-    const { error: submissionError } = await supabase
+    if (content) {
+      payload.content = content;
+    }
+
+    let { error: submissionError } = await supabase
       .from("assignment_submissions")
-      .upsert({
-        assignment_id: id,
-        student_id,
-        file_url: submissionFileUrl,
-        status: "Submitted",
-      });
+      .upsert(payload);
+
+    // Graceful fallback for databases that haven't run
+    // scripts/migrate-assignment-content.sql yet (no 'content' column):
+    // fall back to the legacy behaviour of storing the answer in file_url,
+    // but ONLY when there is no attached file that would be overwritten.
+    if (
+      submissionError &&
+      /column .* does not exist|PGRST204|'content'/i.test(
+        submissionError.message
+      )
+    ) {
+      delete payload.content;
+      if (!payload.file_url) {
+        payload.file_url = content;
+      }
+
+      ({ error: submissionError } = await supabase
+        .from("assignment_submissions")
+        .upsert(payload));
+    }
 
     if (submissionError) throw submissionError;
 

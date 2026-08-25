@@ -13,11 +13,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import { getCurrentStudentId } from "@/services/studentService";
+
 export default function JoinClassScreen() {
   const [meetCode, setMeetCode] = useState("");
   const [username, setUsername] = useState("Student");
 
-  function handleJoin() {
+  async function handleJoin() {
     const code = meetCode.trim().toUpperCase();
 
     if (!code) {
@@ -25,14 +27,28 @@ export default function JoinClassScreen() {
       return;
     }
 
-    // Navigate to the video call with the entered meet code
-    router.push({
-      pathname: "/(video)/call",
-      params: {
-        classname: code,
-        username: username || "Student",
-      },
-    });
+    try {
+      // Get the logged-in student's id. The VideoCallScreen will call
+      // POST /meetings/join with it so this student is recorded as a
+      // participant and gets auto-marked "Present" when class ends.
+      const studentId = await getCurrentStudentId();
+
+      router.push({
+        pathname: "/(video)/call",
+        params: {
+          classname: code,
+          username: username || "Student",
+          role: "student",
+          entityId: studentId,
+        },
+      });
+    } catch (err) {
+      console.error("Failed to get student id:", err);
+      Alert.alert(
+        "Error",
+        "Unable to join the class. Please ensure you are logged in as a student."
+      );
+    }
   }
 
   return (

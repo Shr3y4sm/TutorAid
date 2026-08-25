@@ -1,8 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -15,27 +11,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
 
 import Colors from "@/theme/colors";
 import ResourceCard from "@/components/resources/ResourceCard";
 import { getResources } from "@/api/resource";
+import { openResource } from "@/utils/resource";
 import { Resource } from "@/types/resource";
 
-const PAGE_SIZE = 50;
-
-export default function ResourcesScreen() {
-  const [resources, setResources] = useState<
-    Resource[]
-  >([]);
+export default function StudentResourcesScreen() {
+  const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] =
-    useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [subject, setSubject] = useState<
-    string | undefined
-  >(undefined);
+  const [subject, setSubject] = useState<string | undefined>(
+    undefined
+  );
 
   // Debounced search + subject filter hitting the API.
   useEffect(() => {
@@ -48,17 +39,10 @@ export default function ResourcesScreen() {
     return () => clearTimeout(timeout);
   }, [search, subject]);
 
-  // Reload whenever the tab regains focus (e.g. after an upload).
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [])
-  );
-
   async function load() {
     try {
       const data = await getResources({
-        limit: PAGE_SIZE,
+        limit: 50,
         q: search.trim() || undefined,
         subject,
       });
@@ -77,45 +61,26 @@ export default function ResourcesScreen() {
     await load();
   }
 
-  // Subject chips derived from what has actually been uploaded.
+  async function handleOpen(resource: Resource) {
+    try {
+      await openResource(resource.file_url);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Subject chips derived from what has been shared.
   const subjects = Array.from(
     new Set(resources.map((r) => r.subject))
   ).sort();
-
-  function renderEmpty() {
-    if (loading) return null;
-
-    return (
-      <View style={styles.empty}>
-        <Ionicons
-          name="folder-open-outline"
-          size={48}
-          color={Colors.textSecondary}
-        />
-        <Text style={styles.emptyTitle}>
-          No resources found
-        </Text>
-        <Text style={styles.emptyText}>
-          {search || subject
-            ? "Try a different search or filter."
-            : "Upload your first resource for students to see."}
-        </Text>
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.heading}>Resources</Text>
-
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/(teacher)/upload")}
-        >
-          <Ionicons name="cloud-upload" size={20} color="#FFF" />
-          <Text style={styles.addButtonText}>Upload</Text>
-        </TouchableOpacity>
+        <Text style={styles.subtitle}>
+          Study material shared by your teachers
+        </Text>
       </View>
 
       <View style={styles.searchWrap}>
@@ -177,16 +142,24 @@ export default function ResourcesScreen() {
           renderItem={({ item }) => (
             <ResourceCard
               resource={item}
-              onPress={() =>
-                router.push({
-                  pathname: "/(teacher)/resources/[id]",
-                  params: { id: item.id },
-                })
-              }
+              onPress={() => handleOpen(item)}
             />
           )}
           contentContainerStyle={styles.listContent}
-          ListEmptyComponent={renderEmpty()}
+          ListEmptyComponent={
+            !loading ? (
+              <View style={styles.empty}>
+                <Ionicons
+                  name="folder-open-outline"
+                  size={48}
+                  color={Colors.textSecondary}
+                />
+                <Text style={styles.emptyText}>
+                  No resources found.
+                </Text>
+              </View>
+            ) : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -214,10 +187,7 @@ function FilterChip({
       onPress={onPress}
     >
       <Text
-        style={[
-          styles.chipText,
-          active && styles.chipTextActive,
-        ]}
+        style={[styles.chipText, active && styles.chipTextActive]}
       >
         {label}
       </Text>
@@ -233,9 +203,6 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 16,
   },
 
@@ -245,20 +212,10 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: Colors.primary,
-    borderRadius: 21,
-    paddingHorizontal: 14,
-    height: 42,
-  },
-
-  addButtonText: {
-    color: "#FFF",
+  subtitle: {
     fontSize: 14,
-    fontWeight: "600",
+    color: Colors.textSecondary,
+    marginTop: 4,
   },
 
   searchWrap: {
@@ -327,16 +284,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: Colors.text,
-  },
-
   emptyText: {
-    fontSize: 14,
+    fontSize: 15,
     color: Colors.textSecondary,
-    textAlign: "center",
   },
 });
-

@@ -29,6 +29,7 @@ export default function AssignmentCard({
         subject: assignment.subject ?? "",
         due_date: assignment.due_date,
         max_marks: String(assignment.max_marks),
+        file_url: assignment.file_url ?? "",
       },
     })
   }
