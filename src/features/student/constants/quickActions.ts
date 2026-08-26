@@ -31,6 +31,12 @@ export const quickActions = [
     icon: "calendar-outline",
     color: "#F59E0B",
   },
+  {
+    id: "6",
+    title: "Resources",
+    icon: "library-outline",
+    color: "#0EA5E9",
+  },
 ] as const;
 
 export type QuickAction = (typeof quickActions)[number];

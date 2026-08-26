@@ -20,6 +20,7 @@ const iconMap: Record<
   "document-text": "document-text-outline",
   calendar: "calendar-outline",
   sparkles: "sparkles-outline",
+  folder: "folder-outline",
 };
 
 export default function TeacherQuickAction({

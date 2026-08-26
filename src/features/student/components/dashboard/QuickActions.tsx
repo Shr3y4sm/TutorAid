@@ -26,6 +26,10 @@ export default function QuickActions() {
       case "Schedule":
         router.push("/(student)/schedule");
         break;
+
+      case "Resources":
+        router.push("/(student)/resources");
+        break;
     }
   }
 

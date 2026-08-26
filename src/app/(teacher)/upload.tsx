@@ -14,7 +14,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import { router } from "expo-router";
+import {
+  router,
+  useLocalSearchParams,
+} from "expo-router";
 
 import Colors from "@/theme/colors";
 import { uploadResource } from "@/api/resource";
@@ -38,6 +41,19 @@ export default function UploadScreen() {
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  // Destination folder passed from the repository browser.
+  const params = useLocalSearchParams();
+
+  const folderId = Array.isArray(params.folderId)
+    ? params.folderId[0]
+    : params.folderId;
+
+  const folderName = Array.isArray(
+    params.folderName
+  )
+    ? params.folderName[0]
+    : params.folderName;
 
   async function pickDocument() {
     try {
@@ -96,6 +112,15 @@ export default function UploadScreen() {
       formData.append("subject", subject.trim());
       formData.append("category", category.trim());
 
+      // Place the file inside the folder the teacher
+      // was browsing when they hit Upload.
+      if (folderId) {
+        formData.append(
+          "folder_id",
+          String(folderId)
+        );
+      }
+
       // React Native FormData file descriptor.
       formData.append("file", {
         uri: file.uri,
@@ -151,6 +176,12 @@ export default function UploadScreen() {
             Upload Resource
           </Text>
         </View>
+
+        {folderName ? (
+          <Text style={styles.locationText}>
+            Uploading to: {folderName}
+          </Text>
+        ) : null}
 
         <ScrollView
           contentContainerStyle={styles.content}
@@ -289,6 +320,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     color: Colors.text,
+  },
+
+  locationText: {
+    paddingHorizontal: 16,
+    paddingTop: 6,
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.primaryDark,
   },
 
   content: {

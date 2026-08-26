@@ -301,6 +301,12 @@ export default function TeacherDashboard() {
                     "/(teacher)/ai"
                   );
                   break;
+
+                case "Resources":
+                  router.push(
+                    "/(teacher)/resources"
+                  );
+                  break;
               }
             }}
           />

@@ -2,6 +2,27 @@ import { Request, Response, NextFunction } from "express";
 import supabase from "../config/supabase";
 import { ApiError } from "../utils/ApiError";
 
+/**
+ * Gate for write operations: only authenticated teachers may pass.
+ * Students are allowed read-only access to the repository.
+ */
+export function requireTeacher(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+) {
+  if (!req.user || req.user.role !== "teacher") {
+    return next(
+      new ApiError(
+        403,
+        "Only teachers can perform this action."
+      )
+    );
+  }
+
+  next();
+}
+
 export async function authenticate(
   req: Request,
   res: Response,

@@ -18,3 +18,13 @@ export const updateResourceSchema =
       teacher_id: true,
     })
     .partial();
+
+export const createFolderSchema = z.object({
+  name: z.string().min(1).max(100),
+
+  parent_id: z.string().uuid().optional().nullable(),
+});
+
+export const updateFolderSchema = z.object({
+  name: z.string().min(1).max(100),
+});

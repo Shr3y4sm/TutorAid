@@ -1,5 +1,8 @@
 import { api } from "./client";
-import { Resource } from "@/types/resource";
+import {
+  Resource,
+  ResourceFolder,
+} from "@/types/resource";
 
 export async function getResources(
   params?: {
@@ -8,6 +11,8 @@ export async function getResources(
     subject?: string;
     category?: string;
     q?: string;
+    /** "root" → repository root, folder uuid → inside that folder. */
+    folder?: string;
   }
 ) {
   const search = new URLSearchParams();
@@ -26,6 +31,9 @@ export async function getResources(
 
   if (params?.q)
     search.append("q", params.q);
+
+  if (params?.folder)
+    search.append("folder", params.folder);
 
   const response = await api<{
     success: boolean;
@@ -105,4 +113,71 @@ export async function getResourcesBySubject(
   }>(`/resources/subject/${subject}`);
 
   return response.data;
+}
+
+// -----------------------------------------------------------------
+// Folder repository
+// -----------------------------------------------------------------
+
+/**
+ * List folders at a level of the repository.
+ * `parentId` of null/undefined lists the repository root.
+ */
+export async function getFolders(
+  parentId?: string | null
+): Promise<ResourceFolder[]> {
+  const query = parentId
+    ? `?parent=${encodeURIComponent(parentId)}`
+    : "?parent=root";
+
+  const response = await api<{
+    success: boolean;
+    data: ResourceFolder[];
+  }>(`/resources/folders${query}`);
+
+  return response.data;
+}
+
+/** Create a folder, optionally inside a parent folder (teacher only). */
+export async function createFolder(
+  name: string,
+  parentId?: string | null
+): Promise<ResourceFolder> {
+  const response = await api<{
+    success: boolean;
+    data: ResourceFolder;
+  }>("/resources/folders", {
+    method: "POST",
+    body: {
+      name,
+      parent_id: parentId ?? null,
+    },
+  });
+
+  return response.data;
+}
+
+/** Rename a folder (teacher only). */
+export async function renameFolder(
+  folderId: string,
+  name: string
+): Promise<ResourceFolder> {
+  const response = await api<{
+    success: boolean;
+    data: ResourceFolder;
+  }>(`/resources/folders/${folderId}`, {
+    method: "PATCH",
+    body: { name },
+  });
+
+  return response.data;
+}
+
+/** Delete a folder and its sub-folders; files fall back to root. */
+export async function deleteFolder(
+  folderId: string
+) {
+  await api(`/resources/folders/${folderId}`, {
+    method: "DELETE",
+  });
 }

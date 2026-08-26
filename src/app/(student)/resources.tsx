@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,42 +18,78 @@ import { Ionicons } from "@expo/vector-icons";
 
 import Colors from "@/theme/colors";
 import ResourceCard from "@/components/resources/ResourceCard";
-import { getResources } from "@/api/resource";
+import FolderRow from "@/components/resources/FolderRow";
+import {
+  getFolders,
+  getResources,
+} from "@/api/resource";
 import { openResource } from "@/utils/resource";
-import { Resource } from "@/types/resource";
+import {
+  FolderCrumb,
+  Resource,
+  ResourceFolder,
+} from "@/types/resource";
 
+const ROOT: FolderCrumb = { id: null, name: "All" };
+
+/**
+ * Read-only view of the teachers' resource repository.
+ * Students can browse folders and open files, but cannot
+ * create, upload, rename or delete anything.
+ */
 export default function StudentResourcesScreen() {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const [search, setSearch] = useState("");
-  const [subject, setSubject] = useState<string | undefined>(
-    undefined
+  const [crumbs, setCrumbs] = useState<FolderCrumb[]>(
+    [ROOT]
   );
+  const current = crumbs[crumbs.length - 1];
 
-  // Debounced search + subject filter hitting the API.
+  const [folders, setFolders] = useState<
+    ResourceFolder[]
+  >([]);
+  const [resources, setResources] = useState<
+    Resource[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] =
+    useState(false);
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     setLoading(true);
 
-    const timeout = setTimeout(() => {
-      load();
-    }, 400);
+    const timeout = setTimeout(load, search ? 400 : 0);
 
     return () => clearTimeout(timeout);
-  }, [search, subject]);
+  }, [search, current.id]);
 
   async function load() {
     try {
-      const data = await getResources({
-        limit: 50,
-        q: search.trim() || undefined,
-        subject,
-      });
+      if (search.trim()) {
+        // Search looks across the whole shared repository.
+        const data = await getResources({
+          limit: 50,
+          q: search.trim(),
+        });
 
-      setResources(data.data);
+        setResources(data.data);
+        setFolders([]);
+      } else {
+        const [f, r] = await Promise.all([
+          getFolders(current.id),
+          getResources({
+            limit: 50,
+            folder: current.id ?? "root",
+          }),
+        ]);
+
+        setFolders(f);
+        setResources(r.data);
+      }
     } catch (err) {
-      console.error("Failed to load resources:", err);
+      console.error(
+        "Failed to load resources:",
+        err
+      );
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,6 +101,24 @@ export default function StudentResourcesScreen() {
     await load();
   }
 
+  function enterFolder(folder: ResourceFolder) {
+    setSearch("");
+    setCrumbs([
+      ...crumbs,
+      { id: folder.id, name: folder.name },
+    ]);
+  }
+
+  function jumpToCrumb(crumb: FolderCrumb) {
+    const idx = crumbs.findIndex(
+      (c) => c.id === crumb.id
+    );
+
+    if (idx >= 0 && idx < crumbs.length - 1) {
+      setCrumbs(crumbs.slice(0, idx + 1));
+    }
+  }
+
   async function handleOpen(resource: Resource) {
     try {
       await openResource(resource.file_url);
@@ -69,10 +127,9 @@ export default function StudentResourcesScreen() {
     }
   }
 
-  // Subject chips derived from what has been shared.
-  const subjects = Array.from(
-    new Set(resources.map((r) => r.subject))
-  ).sort();
+  const isEmpty =
+    !loading && folders.length === 0 &&
+    resources.length === 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -83,6 +140,43 @@ export default function StudentResourcesScreen() {
         </Text>
       </View>
 
+      {/* Breadcrumb trail */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.crumbsRow}
+        contentContainerStyle={
+          styles.crumbsContent
+        }
+      >
+        {crumbs.map((crumb, i) => (
+          <TouchableOpacity
+            key={crumb.id ?? "root"}
+            style={styles.crumbItem}
+            onPress={() => jumpToCrumb(crumb)}
+          >
+            <Text
+              style={[
+                styles.crumbText,
+                i === crumbs.length - 1 &&
+                  styles.crumbActive,
+              ]}
+              numberOfLines={1}
+            >
+              {crumb.name}
+            </Text>
+            {i < crumbs.length - 1 ? (
+              <Ionicons
+                name="chevron-forward"
+                size={13}
+                color={Colors.textSecondary}
+              />
+            ) : null}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Search across the whole repository */}
       <View style={styles.searchWrap}>
         <Ionicons
           name="search"
@@ -91,14 +185,18 @@ export default function StudentResourcesScreen() {
         />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search resources..."
-          placeholderTextColor={Colors.textSecondary}
+          placeholder="Search all resources..."
+          placeholderTextColor={
+            Colors.textSecondary
+          }
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
         />
         {search ? (
-          <TouchableOpacity onPress={() => setSearch("")}>
+          <TouchableOpacity
+            onPress={() => setSearch("")}
+          >
             <Ionicons
               name="close-circle"
               size={18}
@@ -108,26 +206,6 @@ export default function StudentResourcesScreen() {
         ) : null}
       </View>
 
-      {subjects.length > 0 && !loading ? (
-        <View style={styles.chipsRow}>
-          <FilterChip
-            label="All"
-            active={!subject}
-            onPress={() => setSubject(undefined)}
-          />
-          {subjects.map((s) => (
-            <FilterChip
-              key={s}
-              label={s}
-              active={subject === s}
-              onPress={() =>
-                setSubject(subject === s ? undefined : s)
-              }
-            />
-          ))}
-        </View>
-      ) : null}
-
       {loading && !refreshing ? (
         <View style={styles.loader}>
           <ActivityIndicator
@@ -135,30 +213,57 @@ export default function StudentResourcesScreen() {
             color={Colors.primary}
           />
         </View>
+      ) : isEmpty ? (
+        <View style={styles.empty}>
+          <Ionicons
+            name="folder-open-outline"
+            size={48}
+            color={Colors.textSecondary}
+          />
+          <Text style={styles.emptyTitle}>
+            {search
+              ? "No resources found"
+              : "Nothing here yet"}
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={resources}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={
+            <>
+              {folders.length > 0 && !search ? (
+                <Text style={styles.sectionLabel}>
+                  Folders
+                </Text>
+              ) : null}
+
+              {!search &&
+                folders.map((folder) => (
+                  <FolderRow
+                    key={folder.id}
+                    folder={folder}
+                    onPress={() =>
+                      enterFolder(folder)
+                    }
+                  />
+                ))}
+
+              {resources.length > 0 ? (
+                <Text style={styles.sectionLabel}>
+                  Files
+                </Text>
+              ) : null}
+            </>
+          }
           renderItem={({ item }) => (
             <ResourceCard
               resource={item}
               onPress={() => handleOpen(item)}
             />
           )}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            !loading ? (
-              <View style={styles.empty}>
-                <Ionicons
-                  name="folder-open-outline"
-                  size={48}
-                  color={Colors.textSecondary}
-                />
-                <Text style={styles.emptyText}>
-                  No resources found.
-                </Text>
-              </View>
-            ) : null
+          contentContainerStyle={
+            styles.listContent
           }
           refreshControl={
             <RefreshControl
@@ -172,29 +277,6 @@ export default function StudentResourcesScreen() {
   );
 }
 
-function FilterChip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      style={[styles.chip, active && styles.chipActive]}
-      onPress={onPress}
-    >
-      <Text
-        style={[styles.chipText, active && styles.chipTextActive]}
-      >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -203,7 +285,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
 
   heading: {
@@ -218,6 +300,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  crumbsRow: {
+    flexGrow: 0,
+    marginBottom: 10,
+  },
+
+  crumbsContent: {
+    alignItems: "center",
+    gap: 2,
+  },
+
+  crumbItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    maxWidth: 140,
+  },
+
+  crumbText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+  },
+
+  crumbActive: {
+    color: Colors.primaryDark,
+  },
+
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
@@ -227,7 +335,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
-    height: 46,
+    height: 44,
     marginBottom: 12,
   },
 
@@ -237,35 +345,14 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
 
-  chipsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-
-  chip: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-
-  chipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-
-  chipText: {
-    fontSize: 13,
-    fontWeight: "600",
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
     color: Colors.textSecondary,
-  },
-
-  chipTextActive: {
-    color: "#FFF",
+    marginTop: 4,
+    marginBottom: 8,
   },
 
   listContent: {
@@ -284,8 +371,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  emptyText: {
-    fontSize: 15,
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "600",
     color: Colors.textSecondary,
   },
 });
