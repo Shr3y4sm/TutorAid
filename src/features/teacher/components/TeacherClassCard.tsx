@@ -40,6 +40,13 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     borderRadius: 14,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
 
   subject: {

@@ -147,10 +147,11 @@ export default function AssignmentDetailsScreen() {
                     router.replace(
                       "/(teacher)/assignments"
                     );
-                  } catch {
+                  } catch (err: any) {
                     Alert.alert(
                       "Error",
-                      "Unable to delete assignment."
+                      err?.message ??
+                        "Unable to delete assignment."
                     );
                   }
                 },

@@ -41,7 +41,11 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     alignItems: "center",
     marginBottom: 15,
-    elevation: 3,
+    elevation: 2,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 },
   },
 
   title: {

@@ -28,8 +28,6 @@ export default function AttendanceScreen() {
     total: 0,
     present: 0,
     absent: 0,
-    late: 0,
-    leave: 0,
     percentage: 0,
   });
 
@@ -54,8 +52,6 @@ export default function AttendanceScreen() {
           total: 0,
           present: 0,
           absent: 0,
-          late: 0,
-          leave: 0,
           percentage: 0,
         }
       );
@@ -111,7 +107,7 @@ export default function AttendanceScreen() {
         <AttendanceSummary
           overall={summary.percentage}
           attended={summary.present}
-          missed={summary.absent + summary.leave}
+          missed={summary.absent}
         />
 
         <Text style={styles.sectionTitle}>Attendance History</Text>
@@ -129,18 +125,21 @@ export default function AttendanceScreen() {
               style={styles.historyCard}
             >
               <Text style={styles.historyDate}>
-                {new Date(record.attendance_date).toLocaleDateString()}
+                {new Date(record.class_date).toLocaleDateString()}
               </Text>
 
-              <Text style={styles.historyStatus}>
-                {record.status}
+              <Text
+                style={[
+                  styles.historyStatus,
+                  {
+                    color: record.present
+                      ? "#16A34A"
+                      : "#DC2626",
+                  },
+                ]}
+              >
+                {record.present ? "Present" : "Absent"}
               </Text>
-
-              {record.remarks ? (
-                <Text style={styles.historyRemarks}>
-                  {record.remarks}
-                </Text>
-              ) : null}
             </View>
           ))
         )}

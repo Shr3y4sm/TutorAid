@@ -109,10 +109,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 14,
     marginBottom: 12,
-    borderRadius: 14,
+    borderRadius: 16,
     backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.border,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   cardPressed: {

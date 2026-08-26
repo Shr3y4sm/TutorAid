@@ -234,7 +234,12 @@ export default function ResourcesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
-        <Text style={styles.heading}>Resources</Text>
+        <View style={styles.headingWrap}>
+          <Text style={styles.heading}>Resources</Text>
+          <Text style={styles.subtitle}>
+            Your resource library
+          </Text>
+        </View>
 
         <View style={styles.actions}>
           <TouchableOpacity
@@ -495,10 +500,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  headingWrap: {
+    flex: 1,
+    marginRight: 8,
+  },
+
   heading: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "700",
     color: Colors.text,
+  },
+
+  subtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 
   actions: {

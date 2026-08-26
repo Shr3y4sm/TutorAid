@@ -1,53 +1,22 @@
-export type AttendanceStatus =
-  | "Present"
-  | "Absent"
-  | "Late"
-  | "Leave";
-
+/**
+ * Canonical attendance record. Matches what meeting auto-marking
+ * and teacher manual marking write to the `attendance` table.
+ */
 export interface Attendance {
-
   id: string;
-
   student_id: string;
-
   marked_by: string;
 
-  attendance_date: string;
+  /** YYYY-MM-DD */
+  class_date: string;
 
-  status: AttendanceStatus;
-
-  remarks?: string;
-
+  present: boolean;
   created_at: string;
-
 }
 
 export interface AttendanceSummary {
-
   total: number;
-
   present: number;
-
   absent: number;
-
-  late: number;
-
-  leave: number;
-
   percentage: number;
-
-}
-
-export interface AttendanceCreate {
-
-  studentId: string;
-
-  teacherId: string;
-
-  attendanceDate: string;
-
-  status: AttendanceStatus;
-
-  remarks?: string;
-
 }
