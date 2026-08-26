@@ -34,6 +34,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     margin: 6,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 
   value: {

@@ -6,8 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Linking,
-  Alert,
 } from "react-native";
 import {
   Assignment,
@@ -20,6 +18,7 @@ import {
   getStudentAssignments,
 } from "@/api/studentAssignments";
 import { getCurrentStudentId } from "@/services/studentService";
+import FileAttachment from "@/components/FileAttachment";
 
 export default function AssignmentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -97,24 +96,13 @@ export default function AssignmentDetailsScreen() {
       </View>
 
       {assignment.file_url ? (
-        <TouchableOpacity
-          style={styles.attachmentButton}
-          onPress={() => {
-            const url = assignment.file_url;
-            if (url) {
-              Linking.openURL(url).catch(() => {
-                Alert.alert(
-                  "Error",
-                  "Unable to open attachment."
-                );
-              });
-            }
-          }}
-        >
-          <Text style={styles.attachmentText}>
-            📎 View Attachment
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.card}>
+          <Text style={styles.heading}>Attachment</Text>
+          <FileAttachment
+            url={assignment.file_url}
+            label="Open Attachment"
+          />
+        </View>
       ) : null}
 
       {studentAssignment?.status === "Graded" ? (

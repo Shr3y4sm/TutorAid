@@ -16,6 +16,8 @@ export interface TeacherAssignment {
   max_marks: number;
 
   created_at: string;
+
+  file_url?: string | null;
 }
 
 export interface TeacherAssignmentsResponse {

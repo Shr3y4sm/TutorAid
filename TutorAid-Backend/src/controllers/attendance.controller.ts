@@ -15,18 +15,16 @@ export const markAttendance = asyncHandler(
     const {
       studentId,
       teacherId,
-      attendanceDate,
-      status,
-      remarks,
+      classDate,
+      present,
     } = req.body;
 
     const attendance =
       await AttendanceService.markAttendance(
         studentId,
         teacherId,
-        attendanceDate,
-        status,
-        remarks
+        classDate,
+        present
       );
 
     return ApiResponse.created(
@@ -73,8 +71,7 @@ export const updateAttendance = asyncHandler(
     const attendance =
       await AttendanceService.updateAttendance(
         routeParam(req, "id"),
-        req.body.status,
-        req.body.remarks
+        req.body.present
       );
 
     return ApiResponse.success(

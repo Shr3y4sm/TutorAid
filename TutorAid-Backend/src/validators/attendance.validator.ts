@@ -3,22 +3,13 @@ import { z } from "zod";
 export const markAttendanceSchema = z.object({
   studentId: z.string().uuid(),
   teacherId: z.string().uuid(),
-  attendanceDate: z.string(),
-  status: z.enum([
-    "Present",
-    "Absent",
-    "Late",
-    "Leave",
-  ]),
-  remarks: z.string().optional(),
+
+  /** YYYY-MM-DD */
+  classDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+
+  present: z.boolean(),
 });
 
 export const updateAttendanceSchema = z.object({
-  status: z.enum([
-    "Present",
-    "Absent",
-    "Late",
-    "Leave",
-  ]),
-  remarks: z.string().optional(),
+  present: z.boolean(),
 });

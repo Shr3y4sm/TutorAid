@@ -29,6 +29,7 @@ export default function AssignmentCard({
         subject: assignment.subject ?? "",
         due_date: assignment.due_date,
         max_marks: String(assignment.max_marks),
+        file_url: assignment.file_url ?? "",
       },
     })
   }
@@ -58,6 +59,28 @@ export default function AssignmentCard({
           {assignment.description}
         </Text>
       ) : null}
+
+      <TouchableOpacity
+        style={styles.submissionsButton}
+        onPress={() =>
+          router.push({
+            pathname:
+              "/(teacher)/assignment-submissions",
+            params: {
+              assignmentId: String(
+                assignment.id
+              ),
+              title: String(
+                assignment.title
+              ),
+            },
+          })
+        }
+      >
+        <Text style={styles.submissionsText}>
+          View Student Submissions
+        </Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 }
@@ -85,5 +108,24 @@ const styles = StyleSheet.create({
   description: {
     marginTop: 8,
     color: "#666",
+  },
+
+  submissionsButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    marginTop: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
+  },
+
+  submissionsText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: Colors.primaryDark,
   },
 });

@@ -48,12 +48,13 @@ export default function ScheduleDetailsScreen() {
                 "/(teacher)/schedule"
               );
 
-            } catch (err) {
+            } catch (err: any) {
               console.log(err);
 
               Alert.alert(
                 "Error",
-                "Unable to delete schedule."
+                err?.message ??
+                  "Unable to delete schedule."
               );
             }
           },

@@ -49,6 +49,12 @@ if (!isWeb) {
 export interface UseVideoCallProps {
   classname: string;
   username: string;
+  /**
+   * The role of the current user. Teachers can screen-share without approval;
+   * students must be granted permission by a teacher.
+   * Defaults to "student".
+   */
+  role?: 'teacher' | 'student';
   serverUrl?: string;
   iceServers?: any[];
   autoJoin?: boolean;
@@ -76,8 +82,14 @@ export interface UseVideoCallResult {
   isMuted: boolean;
   isCameraOff: boolean;
   isScreenSharing: boolean;
+  /** The sharer's own local screen stream (only set while the local user shares). */
+  localScreenStream: any;
   cameraDirection: 'front' | 'back';
-  screenShareAvailable: boolean;
+    screenShareAvailable: boolean;
+  /** True while a student's permission request is awaiting teacher approval. */
+  screenSharePending: boolean;
+  /** The username of a student requesting permission (teacher-side only). */
+  screenShareRequest: string | null;
   totalUnread: number;
   chatTarget: string | null;
   chatMessages: Record<string, ChatMessage[]>;
@@ -86,7 +98,11 @@ export interface UseVideoCallResult {
   toggleMute: () => void;
   toggleCamera: () => void;
   switchCamera: () => void;
-  toggleScreenShare: () => void;
+    toggleScreenShare: () => void;
+  /** Teacher-approved a student's screen-share request. */
+  grantScreenShare: (studentUsername: string) => void;
+  /** Teacher-denied a student's screen-share request. */
+  denyScreenShare: (studentUsername: string) => void;
   toggleHandRaise: () => void;
   endCall: () => void;
   openParticipants: () => void;
@@ -111,6 +127,7 @@ function mergeIceServers(defaults: any[], overrides?: any[]): any[] {
 export function useVideoCall({
   classname,
   username,
+  role,
   serverUrl: overrideServerUrl,
   iceServers: overrideIceServers,
   autoJoin = true,
@@ -132,8 +149,14 @@ export function useVideoCall({
   const remoteVideoRefs = useRef<Record<string, any>>({});
   const chatTargetRef = useRef<string | null>(null);
   const cameraDirectionRef = useRef<'front' | 'back'>('front');
-  const isScreenSharingRef = useRef(false);
+      const isScreenSharingRef = useRef(false);
   const activeScreenSharerRef = useRef<string | null>(null);
+  /** Tracks whether screen tracks have been added to peer connections. */
+  const screenTracksPublishedRef = useRef(false);
+  /** Tracks whether a student's request is awaiting teacher approval. */
+  const screenSharePendingRef = useRef(false);
+  /** Username of the student who sent a permission request (teacher-side). */
+  const screenShareRequestRef = useRef<string | null>(null);
   const isHandRaisedRef = useRef(false);
 
   /* ---- State (for re-renders) ---- */
@@ -144,7 +167,10 @@ export function useVideoCall({
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [activeScreenSharer, setActiveScreenSharer] = useState<string | null>(null);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [localScreenStream, setLocalScreenStream] = useState<any>(null);
+  const [screenSharePending, setScreenSharePending] = useState(false);
+  const [screenShareRequest, setScreenShareRequest] = useState<string | null>(null);
   const [screenShareDeniedMsg, setScreenShareDeniedMsg] = useState<string | null>(null);
   const [chatTarget, setChatTarget] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>({});
@@ -160,13 +186,23 @@ export function useVideoCall({
   const [cameraDirection, setCameraDirection] = useState<'front' | 'back'>('front');
   const [totalUnread, setTotalUnread] = useState(0);
 
-  const screenShareAvailable = isWeb;
+    // Only show the screen-share button when the browser actually supports
+  // the Display Media API (getDisplayMedia).  Mobile browsers and non-secure
+  // contexts don't, so showing the button there just produces NotSupportedError.
+  const screenShareAvailable =
+    isWeb &&
+    typeof navigator !== 'undefined' &&
+    typeof navigator.mediaDevices?.getDisplayMedia === 'function' &&
+    typeof window !== 'undefined' &&
+    window.isSecureContext;
 
   /* ---- Sync refs to state ---- */
   useEffect(() => { chatTargetRef.current = chatTarget; }, [chatTarget]);
   useEffect(() => { cameraDirectionRef.current = cameraDirection; }, [cameraDirection]);
-  useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
+    useEffect(() => { isScreenSharingRef.current = isScreenSharing; }, [isScreenSharing]);
   useEffect(() => { activeScreenSharerRef.current = activeScreenSharer; }, [activeScreenSharer]);
+  useEffect(() => { screenSharePendingRef.current = screenSharePending; }, [screenSharePending]);
+  useEffect(() => { screenShareRequestRef.current = screenShareRequest; }, [screenShareRequest]);
   useEffect(() => { isHandRaisedRef.current = isHandRaised; }, [isHandRaised]);
 
   /* ---- sendWsMessage ---- */
@@ -180,13 +216,15 @@ export function useVideoCall({
   };
 
   /* ---- Action refs (filled by mount useEffect) ---- */
-  const actionsRef = useRef<{
-    startScreenCapture: () => Promise<void>;
+            const actionsRef = useRef<{
+    startScreenCapture: () => Promise<boolean>;
+    acquireScreenStream: () => Promise<boolean>;
     stopScreenCapture: () => void;
     cleanupCall: () => void;
     renegotiateAll: (peer?: string) => Promise<void>;
   }>({
-    startScreenCapture: async () => {},
+    startScreenCapture: async () => false,
+    acquireScreenStream: async () => false,
     stopScreenCapture: () => {},
     cleanupCall: () => {},
     renegotiateAll: async () => {},
@@ -218,9 +256,20 @@ export function useVideoCall({
     setCameraDirection((prev) => (prev === 'front' ? 'back' : 'front'));
   };
 
-  const toggleScreenShare = () => {
+                    const toggleScreenShare = async () => {
     if (isScreenSharingRef.current) {
+      // Currently sharing — stop.
       sendWsMessage('request_screen_share', { enable: false });
+      return;
+    }
+    // If a student's request is currently pending (waiting for approval),
+    // cancel it by stopping the local capture and clearing the pending flag.
+    if (screenSharePendingRef.current) {
+      if (screenStreamRef.current) {
+        actionsRef.current.stopScreenCapture();
+      }
+      setScreenSharePending(false);
+      screenSharePendingRef.current = false;
       return;
     }
     if (activeScreenSharerRef.current && activeScreenSharerRef.current !== currentUser) {
@@ -230,7 +279,44 @@ export function useVideoCall({
       setTimeout(() => setScreenShareDeniedMsg(null), 4000);
       return;
     }
-    sendWsMessage('request_screen_share', { enable: true });
+
+    if (role === 'teacher') {
+      // Teachers can screen-share without requesting permission.
+      // getDisplayMedia MUST be called from a user-gesture context.
+      const ok = await actionsRef.current.startScreenCapture();
+      if (ok) {
+        sendWsMessage('request_screen_share', { enable: true });
+      }
+    } else {
+      // Students must be approved by the teacher.
+      // Call getDisplayMedia NOW (while we still have the user gesture),
+      // then send the request. Tracks will be published to peers only
+      // after the teacher grants approval.
+      const ok = await actionsRef.current.acquireScreenStream();
+      if (ok) {
+        setScreenSharePending(true);
+        screenSharePendingRef.current = true;
+        sendWsMessage('request_screen_share', { enable: true });
+      }
+    }
+  };
+
+  /** Teacher approves a student's screen-share request. */
+  const grantScreenShare = (studentUsername: string) => {
+    sendWsMessage('screen_share_grant', { target: studentUsername, granted: true });
+    setScreenShareRequest(null);
+    screenShareRequestRef.current = null;
+  };
+
+  /** Teacher denies a student's screen-share request. */
+  const denyScreenShare = (studentUsername: string) => {
+    sendWsMessage('screen_share_grant', {
+      target: studentUsername,
+      granted: false,
+      reason: 'Screen share request denied by teacher',
+    });
+    setScreenShareRequest(null);
+    screenShareRequestRef.current = null;
   };
 
   const toggleHandRaise = () => {
@@ -289,7 +375,11 @@ export function useVideoCall({
       client.reconnect();
     } else if (autoJoin) {
       // No client instance at all — start fresh with full setup.
-      const freshClient = new SignalingClient(signalingUrl, { classname, username: currentUser });
+      const freshClient = new SignalingClient(signalingUrl, {
+        classname,
+        username: currentUser,
+        role: role ?? 'student',
+      });
       wsRef.current = freshClient;
       freshClient.on('open', () => {
         setConnectionState('connected');
@@ -360,9 +450,37 @@ export function useVideoCall({
       pc.ontrack = (event: any) => {
         const track = event.track;
         const label = (track?.label || '').toLowerCase();
-        const isScreenTrack =
-          track?.kind === 'video' &&
-          (label.includes('screen') || label.includes('display') || label.includes('window'));
+
+        // Robust screen-share detection. Browsers don't reliably set a
+        // "screen"-like label on *received* WebRTC tracks, so we detect in
+        // this order of reliability:
+        //   1. getSettings().displaySurface → 'monitor' | 'window' | 'browser'
+        //   2. label heuristics
+        //   3. A second video track from a peer that already sends camera = screen
+        let isScreenTrack = false;
+        if (track?.kind === 'video') {
+          try {
+            const settings = track.getSettings?.();
+            if (settings?.displaySurface) isScreenTrack = true;
+          } catch { /* ignore */ }
+          if (!isScreenTrack) {
+            isScreenTrack =
+              label.includes('screen') || label.includes('display') || label.includes('window');
+          }
+          if (!isScreenTrack) {
+            // Peer already sends a camera video track → this extra video is the screen share.
+            const alreadyHasCam = remoteStreamsRef.current[peer];
+            if (alreadyHasCam && alreadyHasCam.getVideoTracks().length > 0) {
+              isScreenTrack = true;
+            }
+          }
+          if (!isScreenTrack) {
+            // The server has told us this peer is currently sharing their screen.
+            if (activeScreenSharerRef.current === peer) {
+              isScreenTrack = true;
+            }
+          }
+        }
 
         let stream = event.streams?.[0];
 
@@ -438,10 +556,20 @@ export function useVideoCall({
         }
       };
 
-      // Add existing local tracks
+      // Add existing local tracks (camera/mic)
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach((track: any) => {
           pc.addTrack(track, localStreamRef.current);
+        });
+      }
+      // If screen sharing is already active, also send the screen stream
+      // to this newly-joined peer (so late joiners see the screen too).
+      if (screenStreamRef.current && isScreenSharingRef.current) {
+        const screenTracks = screenStreamRef.current.getVideoTracks();
+        screenTracks.forEach((track: any) => {
+          const sender = pc.addTrack(track, screenStreamRef.current);
+          if (!screenSendersRef.current[peer]) screenSendersRef.current[peer] = [];
+          screenSendersRef.current[peer].push(sender);
         });
       }
 
@@ -551,30 +679,30 @@ export function useVideoCall({
       );
     };
 
-    const startScreenCapture = async () => {
+        const acquireScreenStream = async (): Promise<boolean> => {
       if (!isWeb) {
         setScreenShareDeniedMsg('Screen sharing is only available on web browsers.');
         setTimeout(() => setScreenShareDeniedMsg(null), 4000);
-        return;
+        return false;
+      }
+      if (typeof window !== 'undefined' && !window.isSecureContext) {
+        setScreenShareDeniedMsg(
+          'Screen sharing requires a secure connection (HTTPS or localhost).'
+        );
+        setTimeout(() => setScreenShareDeniedMsg(null), 5000);
+        return false;
       }
       if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getDisplayMedia) {
         setScreenShareDeniedMsg('Screen sharing is not supported in this browser.');
         setTimeout(() => setScreenShareDeniedMsg(null), 4000);
-        sendWsMessage('request_screen_share', { enable: false });
-        return;
+        return false;
       }
       try {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
         screenStreamRef.current = screenStream;
-        screenSendersRef.current = {};
+        screenTracksPublishedRef.current = false;
+        setLocalScreenStream(screenStream);
         const videoTracks = screenStream.getVideoTracks();
-        Object.entries(peerConnections.current).forEach(([peer, pc]: [string, any]) => {
-          videoTracks.forEach((track: any) => {
-            const sender = pc.addTrack(track, screenStream);
-            if (!screenSendersRef.current[peer]) screenSendersRef.current[peer] = [];
-            screenSendersRef.current[peer].push(sender);
-          });
-        });
         videoTracks.forEach((track: any) => {
           track.addEventListener('ended', () => {
             if (screenStreamRef.current === screenStream) {
@@ -582,12 +710,51 @@ export function useVideoCall({
             }
           });
         });
-        setIsScreenSharing(true);
-        isScreenSharingRef.current = true;
-      } catch (err) {
-        console.warn('Could not capture display stream:', err);
-        sendWsMessage('request_screen_share', { enable: false });
+        return true;
+      } catch (err: any) {
+        const errorCode = err?.name;
+        let message: string;
+        if (errorCode === 'NotAllowedError') {
+          message = 'Screen sharing permission denied. Please allow it in your browser settings.';
+        } else if (errorCode === 'NotSupportedError') {
+          message =
+            'Screen sharing is not supported in this browser or context. ' +
+            'Please use Chrome, Firefox, or Edge on desktop over HTTPS.';
+        } else {
+          message = 'Could not start screen sharing. Please try again.';
+        }
+        setScreenShareDeniedMsg(message);
+        setScreenSharePending(false);
+        screenSharePendingRef.current = false;
+        setTimeout(() => setScreenShareDeniedMsg(null), 5000);
+        return false;
       }
+    };
+
+    const publishScreenTracks = () => {
+      if (!screenStreamRef.current) return;
+      if (screenTracksPublishedRef.current) return;
+      screenSendersRef.current = {};
+      const videoTracks = screenStreamRef.current.getVideoTracks();
+      Object.entries(peerConnections.current).forEach(([peer, pc]: [string, any]) => {
+        videoTracks.forEach((track: any) => {
+          const sender = pc.addTrack(track, screenStreamRef.current);
+          if (!screenSendersRef.current[peer]) screenSendersRef.current[peer] = [];
+          screenSendersRef.current[peer].push(sender);
+        });
+      });
+      screenTracksPublishedRef.current = true;
+      setIsScreenSharing(true);
+      isScreenSharingRef.current = true;
+      // Explicitly renegotiate so peers receive the new screen track.
+      renegotiateAll();
+    };
+
+    const startScreenCapture = async (): Promise<boolean> => {
+      const ok = await acquireScreenStream();
+      if (!ok) return false;
+      publishScreenTracks();
+            return true;
     };
 
     const stopScreenCapture = () => {
@@ -601,10 +768,14 @@ export function useVideoCall({
           try { pc.removeTrack(sender); } catch (err) { console.warn('Could not remove sender:', err); }
         });
       });
-      screenSendersRef.current = {};
+            screenSendersRef.current = {};
       screenStreamRef.current = null;
+      screenTracksPublishedRef.current = false;
+      setLocalScreenStream(null);
       setIsScreenSharing(false);
       isScreenSharingRef.current = false;
+      // Renegotiate so peers fire onremovetrack and hide the screen.
+      renegotiateAll();
     };
 
     const setupDevice = async () => {
@@ -668,16 +839,25 @@ export function useVideoCall({
       setReconnecting(false);
       setReconnectAttempt(0);
       setError(null);
-      isScreenSharingRef.current = false;
+            isScreenSharingRef.current = false;
       activeScreenSharerRef.current = null;
-      chatTargetRef.current = null;
+      setScreenSharePending(false);
+      screenSharePendingRef.current = false;
+      setScreenShareRequest(null);
+      screenShareRequestRef.current = null;
+            chatTargetRef.current = null;
+      screenTracksPublishedRef.current = false;
     };
 
     // Expose internal actions
-    actionsRef.current = { startScreenCapture, stopScreenCapture, cleanupCall, renegotiateAll };
+        actionsRef.current = { startScreenCapture, acquireScreenStream, stopScreenCapture, cleanupCall, renegotiateAll };
 
     /* === Signaling client wiring === */
-    const client = new SignalingClient(signalingUrl, { classname, username: currentUser });
+    const client = new SignalingClient(signalingUrl, {
+      classname,
+      username: currentUser,
+      role: role ?? 'student',
+    });
     wsRef.current = client;
     setConnectionState('connecting');
 
@@ -754,24 +934,75 @@ export function useVideoCall({
       handleIceCandidate({ sender: body.sender, candidate: body.candidate });
     });
 
-    client.on('screen_share_state', (body: any) => {
+                client.on('screen_share_state', (body: any) => {
       const nextActive = Boolean(body?.active);
       const nextSharer = typeof body?.username === 'string' ? body.username : null;
       setActiveScreenSharer(nextActive ? nextSharer : null);
       activeScreenSharerRef.current = nextActive ? nextSharer : null;
       setIsScreenSharing(nextActive && nextSharer === currentUser);
       isScreenSharingRef.current = nextActive && nextSharer === currentUser;
+      // A screen-share-state broadcast means the request was resolved (granted/denied)
+      // by the server, so clear any pending-approval flag.
+      if (screenSharePendingRef.current) {
+        setScreenSharePending(false);
+        screenSharePendingRef.current = false;
+      }
       if (!nextActive) {
         setScreenShareDeniedMsg(null);
         if (screenStreamRef.current) stopScreenCapture();
-      } else if (nextSharer === currentUser && !screenStreamRef.current) {
-        startScreenCapture();
+      } else if (nextSharer === currentUser) {
+        if (!screenStreamRef.current) {
+          // Fallback: stream wasn't acquired from a user-gesture context
+          // (e.g. reconnection). Try again — may fail in browsers that
+          // require a user gesture, but that's the best we can do.
+          startScreenCapture();
+        } else if (!screenTracksPublishedRef.current) {
+          // Stream was already acquired from the button-click user gesture
+          // (student flow) — now that the server granted it, publish tracks
+          // to all peer connections.
+          publishScreenTracks();
+        }
       }
     });
 
-    client.on('screen_share_denied', (body: any) => {
+          client.on('screen_share_denied', (body: any) => {
       const reason = typeof body?.reason === 'string' ? body.reason : null;
+      // The request was denied — clear the pending flag so the UI updates.
+      if (screenSharePendingRef.current) {
+        setScreenSharePending(false);
+        screenSharePendingRef.current = false;
+      }
+      // Stop any local capture we may have started from the button click.
+      if (screenStreamRef.current) {
+        stopScreenCapture();
+        // Notify the server so it knows the share is no longer active.
+        sendWsMessage('request_screen_share', { enable: false });
+      }
       if (reason) {
+        setScreenShareDeniedMsg(reason);
+        setTimeout(() => setScreenShareDeniedMsg(null), 4000);
+      }
+    });
+
+    // Teacher-side: a student is asking for permission to screen-share.
+    client.on('screen_share_request', (body: any) => {
+      const requester = body?.username;
+      if (typeof requester === 'string' && role === 'teacher') {
+        setScreenShareRequest(requester);
+        screenShareRequestRef.current = requester;
+      }
+    });
+
+    // Student-side: teacher responded to the permission request.
+    client.on('screen_share_grant', (body: any) => {
+      const { granted, reason } = body;
+      // The teacher either approved (server → screen_share_state) or rejected
+      // (server → screen_share_denied).  Clear the pending flag here.
+      if (screenSharePendingRef.current) {
+        setScreenSharePending(false);
+        screenSharePendingRef.current = false;
+      }
+      if (!granted && reason) {
         setScreenShareDeniedMsg(reason);
         setTimeout(() => setScreenShareDeniedMsg(null), 4000);
       }
@@ -839,8 +1070,11 @@ export function useVideoCall({
     isMuted,
     isCameraOff,
     isScreenSharing,
+    localScreenStream,
     cameraDirection,
-    screenShareAvailable,
+        screenShareAvailable,
+    screenSharePending,
+    screenShareRequest,
     totalUnread,
     chatTarget,
     chatMessages,
@@ -849,7 +1083,9 @@ export function useVideoCall({
     toggleMute,
     toggleCamera,
     switchCamera,
-    toggleScreenShare,
+        toggleScreenShare,
+    grantScreenShare,
+    denyScreenShare,
     toggleHandRaise,
     endCall,
     openParticipants,

@@ -56,24 +56,13 @@ export async function deleteAssignment(
   );
 }
 
-export async function getAssignmentStudents(
-  assignmentId: string
-) {
-  const response = await api<{
-    success: boolean;
-    data: any[];
-  }>(
-    `/teacher/assignments/${assignmentId}/students`
-  );
-
-  return response.data;
-}
 export interface TeacherSubmission {
   id: string;
   assignment_id: string;
   student_id: string;
   submitted_at: string;
   file_url?: string | null;
+  content?: string | null;
   marks?: number | null;
   feedback?: string | null;
   status: string;

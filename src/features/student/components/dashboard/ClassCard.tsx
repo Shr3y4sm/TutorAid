@@ -1,10 +1,18 @@
-import { View, Text, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
   subject: string;
   teacher: string;
   time: string;
   room: string;
+  /** Present when the class has a live/linked meet code. */
+  onJoin?: () => void;
 };
 
 export default function ClassCard({
@@ -12,6 +20,7 @@ export default function ClassCard({
   teacher,
   time,
   room,
+  onJoin,
 }: Props) {
   return (
     <View style={styles.card}>
@@ -29,10 +38,26 @@ export default function ClassCard({
         </Text>
       </View>
 
-      <View>
+      <View style={styles.right}>
         <Text style={styles.time}>
           {time}
         </Text>
+
+        {onJoin ? (
+          <TouchableOpacity
+            style={styles.joinButton}
+            onPress={onJoin}
+          >
+            <Ionicons
+              name="videocam"
+              size={13}
+              color="#FFF"
+            />
+            <Text style={styles.joinText}>
+              Join
+            </Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
@@ -70,9 +95,30 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
   },
 
+  right: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+
   time: {
     fontSize: 16,
     fontWeight: "700",
     color: "#2563EB",
+  },
+
+  joinButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#2563EB",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+
+  joinText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

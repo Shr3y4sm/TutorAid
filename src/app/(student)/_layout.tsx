@@ -31,6 +31,17 @@ export default function StudentLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#2563EB",
+        tabBarInactiveTintColor: "#94A3B8",
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E2E8F0",
+          height: 62,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+        },
       }}
     >
       <Tabs.Screen
@@ -101,6 +112,13 @@ export default function StudentLayout() {
           href: null,
         }}
       />
+
+      {/* Secondary screens — reachable via quick actions / pushes,
+          kept out of the tab bar for a minimal navigation. */}
+      <Tabs.Screen name="resources" options={{ href: null }} />
+      <Tabs.Screen name="join-class" options={{ href: null }} />
+      <Tabs.Screen name="notifications" options={{ href: null }} />
+      <Tabs.Screen name="schedule" options={{ href: null }} />
 
       {/* Hidden for now. Will be moved to Teacher Module */}
       <Tabs.Screen

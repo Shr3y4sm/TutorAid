@@ -14,6 +14,8 @@ import QuickActions from "@/features/student/components/dashboard/QuickActions";
 import ClassCard from "@/features/student/components/dashboard/ClassCard";
 import AnnouncementCard from "@/features/student/components/dashboard/AnnouncementCard";
 
+import { router } from "expo-router";
+
 import { getStudentDashboard } from "@/api/student";
 import { getCurrentStudentId } from "@/services/studentService";
 
@@ -21,6 +23,9 @@ export default function HomeScreen() {
   const [dashboard, setDashboard] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [studentId, setStudentId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     loadDashboard();
@@ -30,9 +35,11 @@ export default function HomeScreen() {
     setLoading(true);
     setError("");
     try {
-      const studentId = await getCurrentStudentId();
+      const id = await getCurrentStudentId();
 
-      const data = await getStudentDashboard(studentId);
+      setStudentId(id);
+
+      const data = await getStudentDashboard(id);
 
       setDashboard(data);
     } catch (err: any) {
@@ -41,6 +48,38 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
+  }
+
+  /** Joins the live meeting linked to a scheduled class. */
+  async function joinLiveClass(
+    meetCode: string,
+    subject: string
+  ) {
+    const name =
+      dashboard?.student?.full_name ??
+      "Student";
+
+    let entityId = studentId ?? "";
+
+    if (!entityId) {
+      try {
+        entityId =
+          await getCurrentStudentId();
+      } catch {
+        entityId = "";
+      }
+    }
+
+    router.push({
+      pathname: "/(video)/call",
+      params: {
+        classname: meetCode,
+        username: name,
+        role: "student",
+        entityId,
+        subject,
+      },
+    });
   }
 
   if (loading) {
@@ -96,6 +135,15 @@ export default function HomeScreen() {
           teacher="Faculty"
           room={item.room}
           time={`${item.start_time} - ${item.end_time}`}
+          onJoin={
+            item.call_id
+              ? () =>
+                  joinLiveClass(
+                    item.call_id,
+                    item.subject
+                  )
+              : undefined
+          }
         />
       ))}
 
@@ -120,23 +168,24 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FB",
+    backgroundColor: "#F8FAFC",
     paddingHorizontal: 20,
   },
 
   section: {
     marginTop: 20,
-    marginBottom: 15,
-    fontSize: 22,
+    marginBottom: 14,
+    fontSize: 18,
     fontWeight: "700",
     color: "#111827",
+    letterSpacing: 0.2,
   },
 
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F7FB",
+    backgroundColor: "#F8FAFC",
     padding: 24,
   },
 

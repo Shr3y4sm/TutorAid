@@ -15,8 +15,9 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   isCameraOff,
   isScreenSharing,
   isHandRaised,
-  screenShareAvailable,
+    screenShareAvailable,
   screenShareDisabledByPeer,
+  screenSharePending,
   unreadCount,
   onMute,
   onCamera,
@@ -54,17 +55,19 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
         <Text style={styles.controlIcon}>{isCameraOff ? '🚫' : '📹'}</Text>
       </Pressable>
 
-      {screenShareAvailable && (
+            {screenShareAvailable && (
         <Pressable
           style={[
             styles.controlRoundButton,
             isScreenSharing && styles.activeControlButton,
-            screenShareDisabledByPeer && styles.disabledControlButton,
+            (screenSharePending || screenShareDisabledByPeer) && styles.disabledControlButton,
           ]}
-          disabled={Boolean(screenShareDisabledByPeer)}
+          disabled={Boolean(screenSharePending || screenShareDisabledByPeer)}
           onPress={onScreenShare}
         >
-          <Text style={styles.controlIcon}>{isScreenSharing ? '🖥️' : '💻'}</Text>
+          <Text style={styles.controlIcon}>
+            {screenSharePending ? '⏳' : isScreenSharing ? '🖥️' : '💻'}
+          </Text>
         </Pressable>
       )}
 

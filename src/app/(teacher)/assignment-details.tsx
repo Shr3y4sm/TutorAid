@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from "react-native";
 import {
   useLocalSearchParams,
@@ -17,11 +18,16 @@ import {
   deleteAssignment,
 } from "@/api/teacherAssignments";
 
+import FileAttachment from "@/components/FileAttachment";
+
 export default function AssignmentDetailsScreen() {
   const assignment = useLocalSearchParams();
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>
         {String(assignment.title)}
       </Text>
@@ -57,6 +63,23 @@ export default function AssignmentDetailsScreen() {
       <Text style={styles.value}>
         {String(assignment.max_marks)}
       </Text>
+
+      {/* Attachment (file the teacher attached when posting) */}
+
+      {assignment.file_url ? (
+        <>
+          <Text style={styles.label}>
+            Attachment
+          </Text>
+
+          <View style={styles.attachmentCard}>
+            <FileAttachment
+              url={String(assignment.file_url)}
+              label="View Attached File"
+            />
+          </View>
+        </>
+      ) : null}
 
       {/* Edit */}
 
@@ -124,10 +147,11 @@ export default function AssignmentDetailsScreen() {
                     router.replace(
                       "/(teacher)/assignments"
                     );
-                  } catch {
+                  } catch (err: any) {
                     Alert.alert(
                       "Error",
-                      "Unable to delete assignment."
+                      err?.message ??
+                        "Unable to delete assignment."
                     );
                   }
                 },
@@ -164,7 +188,7 @@ export default function AssignmentDetailsScreen() {
           View Student Submissions
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -192,6 +216,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 17,
     color: "#111827",
+  },
+
+  attachmentCard: {
+    marginTop: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
 
   editButton: {

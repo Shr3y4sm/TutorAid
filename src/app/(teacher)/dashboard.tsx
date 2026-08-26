@@ -15,7 +15,10 @@ import { router } from "expo-router";
 import Colors from "@/theme/colors";
 
 import { getTeacherDashboard } from "@/api/teacher";
+import { startMeeting } from "@/api/meetings";
 import { ApiError } from "@/api/client";
+
+import { getCurrentTeacherId } from "@/services/teacherService";
 
 import {
   TeacherDashboardData,
@@ -171,7 +174,7 @@ export default function TeacherDashboard() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.codeButton}
+            style={[styles.codeButton, styles.codeButtonGhost]}
             onPress={() =>
               Share.share({
                 message:
@@ -179,7 +182,12 @@ export default function TeacherDashboard() {
               })
             }
           >
-            <Text style={styles.codeButtonText}>
+            <Text
+              style={[
+                styles.codeButtonText,
+                styles.codeButtonTextGhost,
+              ]}
+            >
               Share
             </Text>
           </TouchableOpacity>
@@ -226,17 +234,48 @@ export default function TeacherDashboard() {
             key={item.id}
             title={item.title}
             icon={item.icon as any}
-            onPress={() => {
+            onPress={async () => {
               switch (item.title) {
-                case "Start Class":
-                  router.push({
-                    pathname: "/(video)/call",
-                    params: {
-                      classname: teacher.teacherCode ?? "classroom",
-                      username: teacher.name ?? "Teacher",
-                    },
-                  });
+                case "Start Class": {
+                  const teacherId = await getCurrentTeacherId();
+                  try {
+                    const meeting = await startMeeting({
+                      teacher_id: teacherId,
+                      subject: teacher.subject ?? "Live Class",
+                    });
+
+                    router.push({
+                      pathname: "/(video)/call",
+                      params: {
+                        classname: meeting.meet_code,
+                        username: teacher.name ?? "Teacher",
+                        role: "teacher",
+                        entityId: teacherId,
+                      },
+                    });
+                  } catch (err) {
+                    console.warn(
+                      "Meeting session could not be created — " +
+                        "starting video call without attendance tracking.",
+                      err
+                    );
+                    // Graceful fallback: if the /meetings backend or DB tables
+                    // aren't available yet, still start the video call using
+                    // the teacher's existing code so the app keeps working.
+                    // Attendance auto-marking simply won't happen this session.
+                    router.push({
+                      pathname: "/(video)/call",
+                      params: {
+                        classname:
+                          teacher.teacherCode ?? teacherId,
+                        username: teacher.name ?? "Teacher",
+                        role: "teacher",
+                        entityId: teacherId,
+                      },
+                    });
+                  }
                   break;
+                }
 
                 case "Students":
                   router.push(
@@ -265,6 +304,12 @@ export default function TeacherDashboard() {
                 case "AI Assistant":
                   router.push(
                     "/(teacher)/ai"
+                  );
+                  break;
+
+                case "Resources":
+                  router.push(
+                    "/(teacher)/resources"
                   );
                   break;
               }
@@ -317,28 +362,38 @@ const styles = StyleSheet.create({
   },
 
   greeting: {
-    color: "#6B7280",
-    fontSize: 16,
+    color: Colors.textSecondary,
+    fontSize: 14,
+    fontWeight: "600",
+    letterSpacing: 0.3,
   },
 
   name: {
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: "700",
+    color: Colors.text,
     marginTop: 4,
   },
 
   subject: {
     marginTop: 4,
-    color: "#64748B",
+    fontSize: 13,
+    color: Colors.textSecondary,
     marginBottom: 20,
   },
 
   codeCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#DBEAFE",
     padding: 18,
     marginBottom: 20,
-    elevation: 3,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
 
   codeTitle: {
@@ -363,8 +418,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     marginRight: 12,
+  },
+
+  codeButtonGhost: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+
+  codeButtonTextGhost: {
+    color: Colors.primaryDark,
   },
 
   codeButtonText: {
@@ -374,9 +439,11 @@ const styles = StyleSheet.create({
 
   heading: {
     marginTop: 22,
-    marginBottom: 14,
-    fontSize: 22,
+    marginBottom: 12,
+    fontSize: 18,
     fontWeight: "700",
+    color: Colors.text,
+    letterSpacing: 0.2,
   },
 
   stats: {

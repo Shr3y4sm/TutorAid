@@ -84,7 +84,10 @@ const safeParse = (message) => {
  * Protocol messages:
  *  - join                  -> body: { classname, username }
  *  - quit                  -> body: { classname, username }
- *  - request_screen_share  -> body: { classname, username, enable }
+  *  - request_screen_share  -> body: { classname, username, role, enable }
+ *      Teachers are auto-granted; students must be approved by the teacher.
+ *  - screen_share_grant    -> body: { classname, username, target, granted, reason? }
+ *      Teacher approves / denies a student's screen-share request.
  *  - request_hand_raise    -> body: { classname, username, raised }
  *  - send_offer            -> body: { classname, username, target, sdp }
  *  - send_answer           -> body: { classname, username, target, sdp }
@@ -105,11 +108,13 @@ const onMessage = (ws, socket, message) => {
     return;
   }
 
-  switch (type) {
+    switch (type) {
     case 'join': {
       if (!classes[classname]) {
         classes[classname] = {
           users: {},
+          roles: {},      // username -> "teacher" | "student"
+          teacher: null,  // username of the teacher (if any)
           screenSharer: null,
           raisedHands: [],
         };
@@ -123,6 +128,11 @@ const onMessage = (ws, socket, message) => {
 
       const existingUsers = Object.keys(classroom.users);
       classroom.users[username] = socket;
+      // Record the participant's role so we can enforce screen-share rules.
+      classroom.roles[username] = body.role || 'student';
+      if (body.role === 'teacher') {
+        classroom.teacher = username;
+      }
 
       // Notify the joining client of who is already in the room.
       send(socket, 'joined', existingUsers);
@@ -171,7 +181,11 @@ const onMessage = (ws, socket, message) => {
           emitHandRaiseState(classname);
         }
 
-        delete classroom.users[username];
+                delete classroom.users[username];
+        delete classroom.roles[username];
+        if (classroom.teacher === username) {
+          classroom.teacher = null;
+        }
         if (!Object.keys(classroom.users).length) {
           delete classes[classname];
           console.log(`[${classname}] Room is now empty, removed.`);
@@ -182,12 +196,17 @@ const onMessage = (ws, socket, message) => {
       break;
     }
 
-    case 'request_screen_share': {
+        case 'request_screen_share': {
       const { enable = false } = body;
       const classroom = classes[classname];
       if (!classroom || !username || typeof username !== 'string') break;
 
+      // Look up the requester's role (stored when they joined).
+      const role = classroom.roles && classroom.roles[username];
+
       if (enable) {
+        // --- Single-share enforcement ---
+        // If someone else is already sharing, deny immediately.
         if (classroom.screenSharer && classroom.screenSharer !== username) {
           send(socket, 'screen_share_denied', {
             active: true,
@@ -197,17 +216,82 @@ const onMessage = (ws, socket, message) => {
           break;
         }
 
-        classroom.screenSharer = username;
-        emitScreenShareState(classname);
-        console.log(`[${classname}] "${username}" started screen sharing.`);
+        // --- Teacher: auto-grant, no permission required ---
+        if (role === 'teacher') {
+          classroom.screenSharer = username;
+          emitScreenShareState(classname);
+          console.log(`[${classname}] "${username}" started screen sharing (teacher, auto-granted).`);
+          break;
+        }
+
+        // --- Student: forward a permission request to the teacher ---
+        const teacherSocket = classroom.teacher
+          ? classroom.users[classroom.teacher]
+          : null;
+        if (teacherSocket) {
+          send(teacherSocket, 'screen_share_request', {
+            username, // the student requesting permission
+          });
+          console.log(`[${classname}] "${username}" requested screen share approval.`);
+        } else {
+          send(socket, 'screen_share_denied', {
+            active: false,
+            username,
+            reason: 'No teacher is present to approve the screen-share request.',
+          });
+        }
+        break;
       } else {
+        // Stop sharing
         if (classroom.screenSharer === username) {
           classroom.screenSharer = null;
           emitScreenShareState(classname);
           console.log(`[${classname}] "${username}" stopped screen sharing.`);
         }
+        break;
+      }
+    }
+
+    case 'screen_share_grant': {
+      const { target, granted, reason } = body;
+      const classroom = classes[classname];
+      if (!classroom) break;
+
+      // Only the teacher may approve / deny a screen-share request.
+      if (classroom.roles && classroom.roles[username] !== 'teacher') {
+        send(socket, 'error', { message: 'Only the teacher can approve screen share.' });
+        break;
       }
 
+      if (typeof target !== 'string') break;
+
+      if (granted) {
+        // Re-verify: another participant may have started sharing in the meantime.
+        if (classroom.screenSharer) {
+          const targetSocket = classroom.users[target];
+          if (targetSocket) {
+            send(targetSocket, 'screen_share_denied', {
+              active: false,
+              username: target,
+              reason: `${classroom.screenSharer} is already sharing the screen`,
+            });
+          }
+          break;
+        }
+        classroom.screenSharer = target;
+        emitScreenShareState(classname);
+        console.log(`[${classname}] "${target}" approved to screen share by ${username}.`);
+      } else {
+        const targetSocket = classroom.users[target];
+        if (targetSocket) {
+          send(targetSocket, 'screen_share_denied', {
+            active: false,
+            username: target,
+            reason: reason || 'Screen share request denied by teacher.',
+          });
+        }
+        console.log(`[${classname}] "${target}" denied screen share by ${username}.`);
+      }
       break;
     }
 
@@ -337,7 +421,11 @@ const onClose = (ws, socket, message) => {
           emitHandRaiseState(cname);
         }
 
-        delete classroom.users[uid];
+                delete classroom.users[uid];
+        delete classroom.roles[uid];
+        if (classroom.teacher === uid) {
+          classroom.teacher = null;
+        }
         console.log(`[${cname}] "${uid}" disconnected.`);
       }
     });

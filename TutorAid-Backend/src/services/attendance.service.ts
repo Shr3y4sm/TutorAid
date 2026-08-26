@@ -1,14 +1,18 @@
 import supabase from "../config/supabase";
 import { ApiError } from "../utils/ApiError";
 
+/**
+ * Canonical attendance record shape (matches meeting auto-marking,
+ * teacher manual marking and the dashboard percentage):
+ *   { student_id, class_date (YYYY-MM-DD), present (boolean), marked_by }
+ */
 export class AttendanceService {
 
   static async markAttendance(
     studentId: string,
     teacherId: string,
-    attendanceDate: string,
-    status: string,
-    remarks?: string
+    classDate: string,
+    present: boolean
   ) {
 
     const { data, error } = await supabase
@@ -17,12 +21,11 @@ export class AttendanceService {
         {
           student_id: studentId,
           marked_by: teacherId,
-          attendance_date: attendanceDate,
-          status,
-          remarks,
+          class_date: classDate,
+          present,
         },
         {
-          onConflict: "student_id,attendance_date",
+          onConflict: "student_id,class_date",
         }
       )
       .select()
@@ -34,7 +37,7 @@ export class AttendanceService {
   }
 
   static async getAttendanceByDate(
-    attendanceDate: string
+    classDate: string
   ) {
 
     const { data, error } = await supabase
@@ -47,7 +50,7 @@ export class AttendanceService {
           usn
         )
       `)
-      .eq("attendance_date", attendanceDate)
+      .eq("class_date", classDate)
       .order("created_at");
 
     if (error) throw new ApiError(400, error.message);
@@ -63,7 +66,7 @@ export class AttendanceService {
       .from("attendance")
       .select("*")
       .eq("student_id", studentId)
-      .order("attendance_date", {
+      .order("class_date", {
         ascending: false,
       });
 
@@ -74,15 +77,13 @@ export class AttendanceService {
 
   static async updateAttendance(
     id: string,
-    status: string,
-    remarks?: string
+    present: boolean
   ) {
 
     const { data, error } = await supabase
       .from("attendance")
       .update({
-        status,
-        remarks,
+        present,
       })
       .eq("id", id)
       .select()
@@ -111,27 +112,29 @@ export class AttendanceService {
 
     const { data, error } = await supabase
       .from("attendance")
-      .select("status")
+      .select("present")
       .eq("student_id", studentId);
 
     if (error) throw new ApiError(400, error.message);
 
-    const summary = {
-      total: data.length,
-      present: data.filter(a => a.status === "Present").length,
-      absent: data.filter(a => a.status === "Absent").length,
-      late: data.filter(a => a.status === "Late").length,
-      leave: data.filter(a => a.status === "Leave").length,
-    };
+    const total = data.length;
+
+    const present =
+      data.filter((a: any) => a.present)
+        .length;
+
+    const absent = total - present;
 
     return {
-      ...summary,
+      total,
+      present,
+      absent,
       percentage:
-        summary.total === 0
+        total === 0
           ? 0
           : Number(
               (
-                (summary.present / summary.total) *
+                (present / total) *
                 100
               ).toFixed(2)
             ),

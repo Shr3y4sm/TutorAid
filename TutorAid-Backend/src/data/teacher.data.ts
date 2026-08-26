@@ -37,6 +37,11 @@ export const teacherDashboard = {
       title: "AI Assistant",
       icon: "sparkles",
     },
+    {
+      id: 6,
+      title: "Resources",
+      icon: "folder",
+    },
   ],
 
   todayClasses: [

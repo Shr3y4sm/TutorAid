@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
-  Linking,
 } from "react-native";
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +20,7 @@ import {
 } from "@/api/teacherAssignments";
 import { gradeSubmission } from "@/api/grading";
 import Colors from "@/theme/colors";
+import FileAttachment from "@/components/FileAttachment";
 
 export default function AssignmentSubmissionsScreen() {
   const params = useLocalSearchParams<{
@@ -241,33 +241,31 @@ export default function AssignmentSubmissionsScreen() {
               </Text>
             ) : null}
 
-            {item.file_url ? (
-              isFileUrl(item.file_url) ? (
-                <TouchableOpacity
-                  style={styles.viewFileButton}
-                  onPress={() => {
-                    Linking.openURL(
-                      item.file_url!
-                    ).catch(() => {
-                      Alert.alert(
-                        "Error",
-                        "Unable to open file."
-                      );
-                    });
-                  }}
-                >
-                  <Text style={styles.viewFileText}>
-                    📎 View Submitted File
-                  </Text>
-                </TouchableOpacity>
-              ) : (
-                <Text
-                  style={styles.contentPreview}
-                  numberOfLines={3}
-                >
-                  {item.file_url}
-                </Text>
-              )
+            {/* Typed answer (legacy rows may have it stored in file_url) */}
+            {item.content ? (
+              <Text
+                style={styles.contentPreview}
+                numberOfLines={3}
+              >
+                {item.content}
+              </Text>
+            ) : null}
+
+            {item.file_url && !isFileUrl(item.file_url) ? (
+              <Text
+                style={styles.contentPreview}
+                numberOfLines={3}
+              >
+                {item.file_url}
+              </Text>
+            ) : null}
+
+            {/* Attached file */}
+            {item.file_url && isFileUrl(item.file_url) ? (
+              <FileAttachment
+                url={item.file_url}
+                label="View Submitted File"
+              />
             ) : null}
 
             {item.marks != null && (
@@ -303,37 +301,34 @@ export default function AssignmentSubmissionsScreen() {
                 ?.full_name ?? "Unknown"}
             </Text>
 
-            {selectedSubmission?.file_url ? (
+            {/* Typed answer */}
+            {selectedSubmission?.content ||
+            (selectedSubmission?.file_url &&
+              !isFileUrl(selectedSubmission.file_url)) ? (
               <View style={styles.answerBox}>
                 <Text style={styles.answerLabel}>
                   Student Answer
                 </Text>
 
-                {isFileUrl(
-                  selectedSubmission.file_url
-                ) ? (
-                  <TouchableOpacity
-                    style={styles.viewFileButton}
-                    onPress={() => {
-                      Linking.openURL(
-                        selectedSubmission.file_url!
-                      ).catch(() => {
-                        Alert.alert(
-                          "Error",
-                          "Unable to open file."
-                        );
-                      });
-                    }}
-                  >
-                    <Text style={styles.viewFileText}>
-                      📎 Open File
-                    </Text>
-                  </TouchableOpacity>
-                ) : (
-                  <Text style={styles.answerText}>
-                    {selectedSubmission.file_url}
-                  </Text>
-                )}
+                <Text style={styles.answerText}>
+                  {selectedSubmission.content ??
+                    selectedSubmission.file_url}
+                </Text>
+              </View>
+            ) : null}
+
+            {/* Attached file */}
+            {selectedSubmission?.file_url &&
+            isFileUrl(selectedSubmission.file_url) ? (
+              <View style={styles.answerBox}>
+                <Text style={styles.answerLabel}>
+                  Submitted File
+                </Text>
+
+                <FileAttachment
+                  url={selectedSubmission.file_url}
+                  label="Open Submitted File"
+                />
               </View>
             ) : null}
 
@@ -470,22 +465,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginBottom: 6,
-  },
-
-  viewFileButton: {
-    backgroundColor: "#EEF2FF",
-    borderRadius: 10,
-    padding: 10,
-    marginTop: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#2563EB",
-  },
-
-  viewFileText: {
-    color: "#2563EB",
-    fontSize: 14,
-    fontWeight: "700",
   },
 
   contentPreview: {

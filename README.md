@@ -1,56 +1,198 @@
-# Welcome to your Expo app 👋
+# TutorAid 📚
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A full-stack tutoring management platform that connects home tutors with their students — live classes, assignments, attendance, a resource repository, and AI teaching tools in a single mobile app.
 
-## Get started
+---
 
-1. Install dependencies
+## Overview
 
-   ```bash
-   npm install
-   ```
+TutorAid consists of three applications:
 
-2. Start the app
+| App | Description |
+|-----|-------------|
+| **Mobile App** | Cross-platform (iOS / Android / Web) client built with Expo & React Native, with separate role-based experiences for **teachers** and **students** |
+| **REST API** | Node.js + Express backend handling business logic, backed by Supabase (PostgreSQL, Auth, Storage) |
+| **Signalling Server** | Standalone WebSocket server coordinating WebRTC peer connections for live video classes |
 
-   ```bash
-   npx expo start
-   ```
+## Features
 
-In the output, you'll find options to open the app in a
+### Teacher
+- **Dashboard** — stats, quick actions, teacher code sharing
+- **Students** — manage students and link them to your classroom
+- **Assignments** — create, update, delete; view and grade student submissions
+- **Attendance** — manual daily marking with per-student control
+- **Schedule** — weekly class timetable with one-tap **Start Class**
+- **Resources** — private folder repository: create folders, upload files, rename/delete; students get read-only access
+- **Live Classes** — WebRTC video calls with chat and participant management
+- **AI Assistant** — teacher productivity tools
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Student
+- **Home dashboard** — attendance summary, today's classes, announcements
+- **Join Class** — enter a meet code or join scheduled classes directly
+- **Assignments** — view, submit, track grades and feedback
+- **Attendance** — personal history and percentage
+- **Resources** — browse the shared folder repository and open files
+- **Notifications** — assignment, schedule, grading, resource and live-class alerts
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Automatic Attendance
+When a teacher ends a live class, every student who **joined** is automatically marked present. Students who didn't join are left untouched — never falsely marked absent.
 
-## Get a fresh project
+## Tech Stack
 
-When you're ready, run:
+| Layer | Technologies |
+|-------|--------------|
+| Mobile | Expo (~56), React Native 0.85, expo-router, TypeScript |
+| State / Data | Supabase JS client, Zustand |
+| UI | Ionicons, custom themed components, react-native-safe-area-context |
+| Backend | Node.js, Express, Multer (file uploads), Zod (validation) |
+| Database | Supabase (PostgreSQL) |
+| Storage | Supabase Storage (`resources` bucket) |
+| Video | WebRTC (`react-native-webrtc`) + custom WebSocket signalling server |
 
-```bash
-npm run reset-project
+## Repository Structure
+
+```text
+TutorAid/
+├── src/                        # Expo mobile app
+│   ├── app/                    # File-based routes
+│   │   ├── (auth)/             #   Login / signup flows
+│   │   ├── (student)/          #   Student screens (tab layout)
+│   │   ├── (teacher)/          #   Teacher screens (stack layout)
+│   │   └── (video)/            #   Live class call screen
+│   ├── api/                    # Typed REST clients per domain
+│   ├── features/               # Feature modules (components, types, constants)
+│   ├── components/             # Shared UI components
+│   ├── services/               # Identity helpers (current user resolution)
+│   ├── hooks/                  # Reusable React hooks
+│   ├── theme/                  # Colors, spacing, typography tokens
+│   └── config/                 # Env & Supabase client config
+│
+├── TutorAid-Backend/           # REST API
+│   ├── src/
+│   │   ├── controllers/        # Request handlers
+│   │   ├── services/           # Business logic (Supabase queries)
+│   │   ├── routes/             # Express routers
+│   │   ├── middleware/         # Auth (JWT), validation, uploads
+│   │   ├── validators/         # Zod request schemas
+│   │   └── utils/              # ApiResponse, notifications, etc.
+│   ├── signalling-server/      # WebSocket server for WebRTC
+│   └── supabase/               # SQL migrations to run manually
+│
+├── android/                    # Android native project (prebuild output)
+└── assets/                     # Images, icons, splash assets
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting Started
 
-### Other setup steps
+### Prerequisites
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **Node.js** ≥ 18 and **npm** ≥ 9
+- A **Supabase** project (free tier works)
+- For video calls on physical devices: an [Expo development build](https://docs.expo.dev/develop/development-builds/introduction/) (`npx expo run:android`)
 
-## Learn more
+### 1. Database Setup
 
-To learn more about developing your project with Expo, look at the following resources:
+In your Supabase project's SQL editor:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. Create the core tables for your deployment (users, classes, assignments, attendance, resources, meetings).
+2. Run the migration scripts in `TutorAid-Backend/supabase/`:
 
-## Join the community
+| Script | Purpose |
+|--------|---------|
+| `resource_folders.sql` | Folder structure for the resource repository |
+| `assignment_cascade_delete.sql` | Cascading deletes for assignments & submissions |
+| `schedule_deletes.sql` | Safe schedule deletion with linked meetings |
 
-Join our community of developers creating universal apps.
+3. Create a storage bucket named **`resources`**.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### 2. Backend API
+
+```bash
+cd TutorAid-Backend
+
+# Configure environment
+cp .env.example .env
+# Fill in: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+#          STREAM_API_KEY, STREAM_SECRET
+
+npm install
+npm run dev          # starts on http://localhost:3000
+```
+
+### 3. Signalling Server (for video calls)
+
+```bash
+cd TutorAid-Backend/signalling-server
+
+cp .env.example .env # optional: PORT (default 4000), WS_PORT (default 8080)
+
+npm install
+npm start            # or: npm run signalling from TutorAid-Backend/
+```
+
+### 4. Mobile App
+
+```bash
+npm install
+
+# Point the app at your API - edit src/config/env.ts:
+#   export const API_BASE_URL = "http://<your-lan-ip>:3000";
+# (Android emulators cannot reach localhost; use your machine's LAN IP.)
+
+npx expo start       # press a -> Android, i -> iOS, w -> web
+```
+
+## Available Scripts
+
+### Mobile app (root)
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start the Expo dev server |
+| `npm run android` | Build & run on Android |
+| `npm run ios` | Build & run on iOS |
+| `npm run web` | Run in the browser |
+| `npx tsc --noEmit` | Type-check the app |
+
+### Backend (`TutorAid-Backend/`)
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Development server with hot reload (nodemon) |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run the compiled build |
+| `npm run signalling` | Start the WebSocket signalling server |
+
+## API Summary
+
+All protected routes require `Authorization: Bearer <supabase-jwt>`.
+
+| Prefix | Purpose | Write access |
+|--------|---------|--------------|
+| `POST /auth/*` | Signup / login | Public |
+| `/teacher/students` · `/teacher/assignments` · `/teacher/attendance` · `/teacher/schedule` · `/teacher/ai` | Teacher operations | Teacher only |
+| `/resources` (+ `/resources/folders`) | Resource repository & folders | Teacher writes, student reads |
+| `/meetings` | Live class sessions (`start`, `join`, `end`) | End-of-meeting auto-marks attendance |
+| `/assignments` · `/notifications` · `/courses` · `/attendance` | Shared student-facing data | Role-dependent |
+
+## Key Design Decisions
+
+- **Teacher identity is resolved server-side** from the JWT (`teachers.auth_user_id`), never trusted from the request body.
+- **Folder ownership is enforced** on every write - teachers can only modify their own repository tree.
+- **Notifications are fire-and-forget**: a notification failure can never fail the primary operation that triggered it.
+- **Role-based middleware** (`authenticate`, `requireTeacher`) gates all mutating endpoints.
+- **Attendance is canonical boolean** (`class_date`, `present`, `marked_by`) across auto-marking, manual marking and reporting.
+
+## Roadmap
+
+- [ ] Fee module - reminders, fee structures, per-student records
+- [ ] Class recordings and call logs
+- [ ] Weekly/monthly attendance summaries; cancelled-class notifications
+- [ ] In-app messaging between tutors and students
+- [ ] Student performance graphs
+- [ ] In-class notes/pointers
+
+## License
+
+Distributed under the [MIT License](LICENSE).
+
