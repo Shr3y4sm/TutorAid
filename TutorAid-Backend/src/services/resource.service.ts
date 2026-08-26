@@ -1,6 +1,10 @@
 import crypto from "crypto";
 import supabase from "../config/supabase";
 import { ApiError } from "../utils/ApiError";
+import {
+  getTeacherStudentIds,
+  notifyStudents,
+} from "../utils/notify";
 
 /** Folder node in a teacher's resource repository. */
 export interface ResourceFolderRow {
@@ -97,6 +101,24 @@ export class ResourceService {
 
     if (error) {
       throw new ApiError(400, error.message);
+    }
+
+    // Notify the teacher's students (never blocks the upload).
+    try {
+      const studentIds =
+        await getTeacherStudentIds(teacherId);
+
+      await notifyStudents(studentIds, {
+        teacher_id: teacherId,
+        title: "New Resource",
+        message: `${body.title} was added to your resources.`,
+        type: "resource",
+      });
+    } catch (notifyErr) {
+      console.warn(
+        "resource notification failed:",
+        notifyErr
+      );
     }
 
     return data;

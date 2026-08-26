@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import supabase from "../config/supabase";
+import {
+  getTeacherStudentIds,
+  notifyStudents,
+} from "../utils/notify";
 
 /** Generate a unique meet code like "TA-AB12CD". */
 function generateMeetCode(): string {
@@ -69,6 +73,22 @@ export async function startMeeting(req: Request, res: Response) {
         success: false,
         message: error.message,
       });
+    }
+
+    // Notify the teacher's students about the live class
+    // (fire-and-forget; never blocks the meeting start).
+    try {
+      const studentIds = await getTeacherStudentIds(teacher_id);
+
+      await notifyStudents(studentIds, {
+        teacher_id,
+        title: "Live Class Started",
+        message:
+          `${meetingSubject} is live now. Meet code: ${meetCode}`,
+        type: "meeting",
+      });
+    } catch (notifyErr) {
+      console.warn("meeting notification failed:", notifyErr);
     }
 
     return res.status(201).json({

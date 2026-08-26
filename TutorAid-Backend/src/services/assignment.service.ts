@@ -123,10 +123,25 @@ export class AssignmentService {
     assignmentId: string
   ) {
 
-    await supabase
-      .from("assignment_students")
-      .delete()
-      .eq("assignment_id", assignmentId);
+    // Delete child rows in FK-safe order. Skipping
+    // assignment_submissions previously caused the whole
+    // delete to fail with a foreign-key violation whenever
+    // a student had already submitted.
+    const { error: submissionsError } =
+      await supabase
+        .from("assignment_submissions")
+        .delete()
+        .eq("assignment_id", assignmentId);
+
+    if (submissionsError) throw submissionsError;
+
+    const { error: studentsError } =
+      await supabase
+        .from("assignment_students")
+        .delete()
+        .eq("assignment_id", assignmentId);
+
+    if (studentsError) throw studentsError;
 
     const { error } =
       await supabase

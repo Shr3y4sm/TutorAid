@@ -1,4 +1,5 @@
 import supabase from "../config/supabase";
+import { notifyStudent } from "../utils/notify";
 
 export class GradingService {
 
@@ -34,6 +35,27 @@ export class GradingService {
 
     if (assignmentError)
       throw assignmentError;
+
+    // Notify the student (fire-and-forget).
+    try {
+      const { data: assignment } = await supabase
+        .from("assignments")
+        .select("title")
+        .eq("id", data.assignment_id)
+        .maybeSingle();
+
+      await notifyStudent(data.student_id, {
+        title: "Assignment Graded",
+        message:
+          `${assignment?.title ?? "Your assignment"} was graded: ${marks} marks.`,
+        type: "grading",
+      });
+    } catch (notifyErr) {
+      console.warn(
+        "grading notification failed:",
+        notifyErr
+      );
+    }
 
     return data;
   }
