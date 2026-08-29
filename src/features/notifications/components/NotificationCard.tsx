@@ -27,6 +27,12 @@ function icon(type: string) {
     case "announcement":
       return "megaphone";
 
+    case "schedule":
+      return "calendar";
+
+    case "meeting":
+      return "videocam";
+
     default:
       return "notifications";
   }

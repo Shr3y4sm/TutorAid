@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
 import supabase from "../config/supabase";
+import {
+  getTeacherStudentIds,
+  notifyStudents,
+} from "../utils/notify";
 
 export async function getTeacherSchedule(
   req: Request,
@@ -156,12 +160,51 @@ export async function deleteSchedule(
   try {
     const { id } = req.params;
 
+    // Fetch the schedule first so we can (a) 404 cleanly when it
+    // doesn't exist, and (b) notify the teacher's students with the
+    // class details after a successful delete.
+    const { data: schedule, error: fetchError } = await supabase
+      .from("schedule")
+      .select("teacher_id, subject, day, start_time, end_time")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (!schedule) {
+      return res.status(404).json({
+        success: false,
+        message: "Schedule not found.",
+      });
+    }
+
     const { error } = await supabase
       .from("schedule")
       .delete()
       .eq("id", id);
 
     if (error) throw error;
+
+    // Fire-and-forget: tell the teacher's students the class is cancelled.
+    // A notification failure must never surface as a delete failure.
+    try {
+      const studentIds = await getTeacherStudentIds(
+        schedule.teacher_id
+      );
+
+      await notifyStudents(studentIds, {
+        teacher_id: schedule.teacher_id,
+        title: "Class Cancelled",
+        message:
+          `${schedule.subject} on ${schedule.day} at ${schedule.start_time} has been cancelled.`,
+        type: "schedule",
+      });
+    } catch (notifyErr) {
+      console.warn(
+        "cancellation notification failed:",
+        notifyErr
+      );
+    }
 
     res.json({
       success: true,

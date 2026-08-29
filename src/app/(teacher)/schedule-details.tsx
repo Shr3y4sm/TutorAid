@@ -23,8 +23,8 @@ export default function ScheduleDetailsScreen() {
 
   function removeSchedule() {
     Alert.alert(
-      "Delete Schedule",
-      "Are you sure you want to delete this schedule?",
+      "Cancel Class",
+      "This class will be cancelled and your students will be notified automatically.",
       [
         {
           text: "Cancel",

@@ -3,6 +3,8 @@ export type NotificationType =
   | "course"
   | "attendance"
   | "announcement"
+  | "schedule"
+  | "meeting"
   | "system";
 
 export interface Notification {
