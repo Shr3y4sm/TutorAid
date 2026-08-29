@@ -426,6 +426,68 @@ export async function getTeacherMeetings(req: Request, res: Response) {
 }
 
 /**
+ * GET /meetings/student/:studentId/history
+ * All meetings (past + live) for a student's linked teacher(s), tagged with
+ * whether this student joined (presence). Used for the student call-log screen.
+ */
+export async function getStudentHistory(req: Request, res: Response) {
+  try {
+    const { studentId } = req.params;
+
+    const { data: links, error: linkError } = await supabase
+      .from("teacher_students")
+      .select("teacher_id")
+      .eq("student_id", studentId);
+
+    if (linkError) {
+      return res.status(500).json({ success: false, message: linkError.message });
+    }
+
+    const teacherIds = (links ?? []).map((l: any) => l.teacher_id);
+
+    if (teacherIds.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const { data, error } = await supabase
+      .from("meeting_sessions")
+      .select("*")
+      .in("teacher_id", teacherIds)
+      .order("started_at", { ascending: false });
+
+    if (error) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+
+    const { data: participations, error: partError } = await supabase
+      .from("meeting_participants")
+      .select("session_id, joined_at, left_at")
+      .eq("student_id", studentId);
+
+    if (partError) {
+      return res.status(500).json({ success: false, message: partError.message });
+    }
+
+    const participationBySession = new Map(
+      (participations ?? []).map((p: any) => [p.session_id, p])
+    );
+
+    const withPresence = (data ?? []).map((session: any) => ({
+      ...session,
+      joined: participationBySession.has(session.id),
+      joined_at: participationBySession.get(session.id)?.joined_at ?? null,
+    }));
+
+    return res.json({ success: true, data: withPresence });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message ?? "Internal Server Error",
+    });
+  }
+}
+
+/**
  * GET /meetings/student/:studentId
  * Live meetings for a student's teacher(s) — used for "Live Now" badge.
  */

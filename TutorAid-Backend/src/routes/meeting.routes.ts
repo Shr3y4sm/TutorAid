@@ -7,6 +7,7 @@ import {
   getMeeting,
   getParticipants,
   getTeacherMeetings,
+  getStudentHistory,
   getStudentLiveMeetings,
 } from "../controllers/meeting.controller";
 
@@ -19,6 +20,7 @@ router.post("/end", endMeeting);
 
 // Meeting lookup
 router.get("/teacher/:teacherId", getTeacherMeetings);
+router.get("/student/:studentId/history", getStudentHistory);
 router.get("/student/:studentId", getStudentLiveMeetings);
 router.get("/:code/participants", getParticipants);
 router.get("/:code", getMeeting);

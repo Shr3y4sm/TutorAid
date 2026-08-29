@@ -21,6 +21,7 @@ const iconMap: Record<
   calendar: "calendar-outline",
   sparkles: "sparkles-outline",
   folder: "folder-outline",
+  time: "time-outline",
 };
 
 export default function TeacherQuickAction({

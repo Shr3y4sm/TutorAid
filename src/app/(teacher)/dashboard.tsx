@@ -312,6 +312,12 @@ export default function TeacherDashboard() {
                     "/(teacher)/resources"
                   );
                   break;
+
+                case "Class History":
+                  router.push(
+                    "/(teacher)/history" as any
+                  );
+                  break;
               }
             }}
           />

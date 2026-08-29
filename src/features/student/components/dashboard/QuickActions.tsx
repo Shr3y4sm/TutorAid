@@ -30,6 +30,10 @@ export default function QuickActions() {
       case "Resources":
         router.push("/(student)/resources");
         break;
+
+      case "Class History":
+        router.push("/(student)/history" as any);
+        break;
     }
   }
 

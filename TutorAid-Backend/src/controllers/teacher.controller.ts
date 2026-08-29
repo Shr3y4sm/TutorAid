@@ -192,6 +192,7 @@ export async function getTeacherDashboard(
           { id: 4, title: "Attendance",   icon: "checkmark-circle" },
           { id: 5, title: "Schedule",     icon: "calendar" },
           { id: 6, title: "AI Assistant",  icon: "sparkles" },
+          { id: 7, title: "Class History", icon: "time" },
         ],
 
         todayClasses: classes.map((c: any) => ({

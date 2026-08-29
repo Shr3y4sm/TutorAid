@@ -115,6 +115,28 @@ export async function getTeacherMeetings(
   return response.data;
 }
 
+export interface StudentMeetingRecord extends MeetingSession {
+  /** `true` if this student joined the meeting (presence). */
+  joined: boolean;
+  joined_at: string | null;
+}
+
+/**
+ * GET /meetings/student/:studentId/history
+ * All meetings (past + live) for a student's teachers, each tagged with
+ * whether this student joined. Powers the student call-log screen.
+ */
+export async function getStudentMeetings(
+  studentId: string
+): Promise<StudentMeetingRecord[]> {
+  const response = await api<{
+    success: boolean;
+    data: StudentMeetingRecord[];
+  }>(`/meetings/student/${studentId}/history`);
+
+  return response.data;
+}
+
 /**
  * GET /meetings/student/:studentId
  * Live meetings for the student's teacher(s) — used for "Live Now" badge.
