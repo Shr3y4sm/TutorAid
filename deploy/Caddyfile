@@ -1,0 +1,26 @@
+# Caddyfile — TLS termination for TutorAid.
+#
+# Terminates HTTPS (auto Let's Encrypt via Caddy) and reverse-proxies:
+#   signal.example.com  -> signalling server HTTP (health/stats) on :4000
+#   signal.example.com/ws -> same upstream, WebSocket upgraded to WSS
+#
+# In production set your real domain here (replace example.com).
+
+# ---- in-memory site for the signalling HTTP/WS endpoints over WSS ----
+:8443 {
+	# HTTP health/stats over TLS (also proxied on /ws via WebSocket)
+	reverse_proxy signalling:4000 {
+		# Forward the Upgrade/Connection headers for WebSocket
+		header_up X-Forwarded-For {remote_host}
+	}
+}
+
+# ---- (optional) public site route for your domain ----
+# signal.example.com {
+# 	reverse_proxy signalling:4000
+# }
+
+# Standard HTTPS on :443 for the API if you serve it through the same host
+# api.example.com {
+# 	reverse_proxy api:3000
+# }

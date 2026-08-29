@@ -1,0 +1,39 @@
+# Production overlay: adds TLS (Caddy auto-HTTPS + WSS) in front of the
+# signalling server, and mounts a production .env.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+#
+# Optional: point your domain's A record at this host, then Caddy obtains +
+# renews Let's Encrypt certs automatically. The signalling server behind it
+# can run plain WS on internal ports; Caddy terminates TLS.
+#
+# Required for a fully working beta:
+#   - a public hostname (Caddy serves HTTPS + WSS on :443 / :8443)
+#   - a TURN relay (see EXPO_PUBLIC_TURN_SERVERS) for NAT traversal
+
+services:
+  signalling:
+    # No extra ports exposed here — TLS is terminated by Caddy below.
+    expose:
+      - "4000"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - signalling
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
