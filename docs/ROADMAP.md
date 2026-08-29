@@ -34,7 +34,7 @@ resources → attendance** against real infrastructure.
 - [ ] Confirm camera/mic permission strings in `app.json` render correctly in EAS builds.
 
 ### V1 feature slices
-- [ ] **Call log / history** — a screen listing past meetings (reuse `getTeacherMeetings`/`getStudentLiveMeetings`).
+- [x] **Call log / history** — teacher + student history screens (`getTeacherMeetings`, `GET /meetings/student/:studentId/history`). Both dashboards have a "Class History" quick action.
 - [ ] **Class pointer notes** — `class_notes` table + in-call FAB to jot notes about a student/class.
 - [ ] **Cancellation auto-notify** — `DELETE /schedules/:id` emits notifications to enrolled students.
 - [ ] **Fee reminders (light)** — `fee_reminders` table + daily job + in-app "Fees" screen + push notification.
