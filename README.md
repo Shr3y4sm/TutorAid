@@ -112,12 +112,14 @@ cd TutorAid-Backend
 
 # Configure environment
 cp .env.example .env
-# Fill in: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
-#          STREAM_API_KEY, STREAM_SECRET
+# Fill in: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 npm install
 npm run dev          # starts on http://localhost:3000
 ```
+
+> Note: the backend uses the **service-role** key server-side. The mobile app
+> uses the **anon** key only (see `src/config/env.ts`).
 
 ### 3. Signalling Server (for video calls)
 
@@ -135,12 +137,54 @@ npm start            # or: npm run signalling from TutorAid-Backend/
 ```bash
 npm install
 
-# Point the app at your API - edit src/config/env.ts:
-#   export const API_BASE_URL = "http://<your-lan-ip>:3000";
-# (Android emulators cannot reach localhost; use your machine's LAN IP.)
+# Point the app at your API & signalling server via src/config/env.ts
+# (dev defaults: API http://localhost:3000, signalling ws://localhost:8080/ws)
+# Android emulators cannot reach localhost; use your machine's LAN IP in app.json:
 
 npx expo start       # press a -> Android, i -> iOS, w -> web
 ```
+
+### 5. Production environment
+
+The app resolves configuration in this order (see `src/config/env.ts`):
+
+1. **`EXPO_PUBLIC_*` env vars** — set these in your EAS build profile.
+2. **`extra.*` in `app.json`** — static per build profile, always available.
+3. **Dev defaults** — localhost endpoints + dev Supabase project.
+
+| Variable | Purpose |
+|----------|---------|
+| `EXPO_PUBLIC_API_BASE_URL` | Base URL of the REST API, e.g. `https://api.tutoraid.app` |
+| `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase **anon** key (safe for clients) |
+| `EXPO_PUBLIC_SIGNALING_URL` | WebSocket URL of the signalling server, e.g. `wss://signal.tutoraid.app/ws` |
+| `EXPO_PUBLIC_TURN_SERVERS` | JSON array of TURN relay servers (required for NAT traversal) |
+
+#### Containerised deployment
+
+```bash
+# One-command boot of the REST API + signalling server
+docker compose up -d --build
+
+# Validate compose config without starting anything
+docker compose config -q
+```
+
+See `Makefile` for shortcuts (`make compose-up`, `make compose-logs`, …).
+The signalling server must be fronted with TLS/WSS for production browsers.
+
+#### TURN servers (required for real-NAT video calls)
+
+The video stack uses Google's public STUN by default — that works on a LAN
+but **not** across NATs/firewalls. Deploy a TURN server (Xirsys, Metered, or
+self-hosted coturn) and set it via `EXPO_PUBLIC_TURN_SERVERS`:
+
+```
+EXPO_PUBLIC_TURN_SERVERS=[{"urls":"turn:turn.example.com:3478","username":"tutoraid","credential":"secret"}]
+```
+
+The app reads this in `src/config/env.ts` and appends it to the ICE servers
+in `src/features/video-call/config.ts`.
 
 ## Available Scripts
 

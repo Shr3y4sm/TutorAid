@@ -1,0 +1,23 @@
+services:
+  # TutorAid REST API (Express + Supabase)
+  api:
+    build:
+      context: ./TutorAid-Backend
+    env_file:
+      - path: ./TutorAid-Backend/.env
+        required: false
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  # WebRTC signalling server (WebSocket coordination for video classes)
+  signalling:
+    build:
+      context: ./TutorAid-Backend/signalling-server
+    env_file:
+      - path: ./TutorAid-Backend/signalling-server/.env
+        required: false
+    ports:
+      - "4000:4000"
+      - "8080:8080"
+    restart: unless-stopped

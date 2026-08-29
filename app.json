@@ -70,7 +70,11 @@
       "eas": {
         "projectId": "bab44444-30d1-44f2-9d2a-f963a3731395"
       },
-      "SIGNALING_URL": "ws://localhost:8080/ws"
+      "apiBaseUrl": "http://localhost:3000",
+      "supabaseUrl": "https://mwoysjrkdgmnkpxvwitw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13b3lzanJrZGdtbmtweHZ3aXR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwOTA1NTAsImV4cCI6MjA5ODY2NjU1MH0.QF-biT64UwmKX2GkXSPPYf5i8hpUIFnm7cPGncwFK1Y",
+      "signalingUrl": "ws://localhost:8080/ws",
+      "turnServers": "[]"
     }
   }
 }
