@@ -79,3 +79,13 @@ create unique index if not exists attendance_student_class_unique
 -- Common lookup index
 create index if not exists idx_attendance_student
   on attendance (student_id);
+
+-- ------------------------------------------------------------------
+-- 4) attendance legacy constraints — the live table still has the
+--    legacy status/remarks columns as NOT NULL, but the backend
+--    (unified boolean schema) never sets them → insert fails with
+--    'null value in column "status" violates not-null constraint'.
+--    Make them optional (columns kept, no data loss).
+-- ------------------------------------------------------------------
+alter table attendance alter column status  drop not null;
+alter table attendance alter column remarks drop not null;
