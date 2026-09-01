@@ -3,11 +3,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import {
   getAttendanceSummary,
@@ -102,7 +105,21 @@ export default function AttendanceScreen() {
           />
         }
       >
-        <Text style={styles.heading}>Attendance</Text>
+        <View style={styles.headingRow}>
+          <Text style={styles.heading}>Attendance</Text>
+          <TouchableOpacity
+            style={styles.reportsLink}
+            onPress={() => router.push("/(student)/reports" as any)}
+          >
+            <Ionicons name="stats-chart" size={16} color="#2563EB" />
+            <Text style={styles.reportsLinkText}>Reports</Text>
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color="#2563EB"
+            />
+          </TouchableOpacity>
+        </View>
 
         <AttendanceSummary
           overall={summary.percentage}
@@ -169,6 +186,31 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 20,
     color: "#111827",
+  },
+
+  headingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+
+  reportsLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#EFF6FF",
+    borderColor: "#DBEAFE",
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+
+  reportsLinkText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#2563EB",
   },
 
   sectionTitle: {

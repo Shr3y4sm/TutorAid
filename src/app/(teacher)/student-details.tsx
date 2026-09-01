@@ -6,8 +6,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import { getStudent } from "@/api/teacherStudents";
 import { TeacherStudent } from "@/features/teacher/students/types/student";
@@ -115,6 +118,24 @@ export default function StudentDetailsScreen() {
         <Text style={styles.value}>
           {student.parent_phone ?? "-"}
         </Text>
+
+        <TouchableOpacity
+          style={styles.reportButton}
+          onPress={() =>
+            router.push({
+              pathname: "/(teacher)/student-report",
+              params: {
+                id: String(id),
+                name: student.full_name ?? "",
+              },
+            } as any)
+          }
+        >
+          <Ionicons name="stats-chart" size={20} color="#FFF" />
+          <Text style={styles.reportButtonText}>
+            View Performance Report
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -150,5 +171,22 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 17,
     color: "#111827",
+  },
+
+  reportButton: {
+    marginTop: 28,
+    height: 54,
+    borderRadius: 16,
+    backgroundColor: "#2563EB",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  reportButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

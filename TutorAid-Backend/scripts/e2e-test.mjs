@@ -232,7 +232,69 @@ if (teacherToken && teacherId) {
 }
 
 // ---------------------------------------------------------------------------
-// 10. Cleanup — remove everything created (rows + auth users)
+// 10. Performance report — full real flow:
+//     teacher creates assignment → student submits → teacher grades → report
+//     (uses the real API endpoints, exactly like the mobile app)
+// ---------------------------------------------------------------------------
+if (teacherToken && teacherId && studentId) {
+  try {
+    // 10a. Teacher creates an assignment (real endpoint)
+    const create = await http("POST", "/teacher/assignments", teacherToken, {
+      teacher_id: teacherId,
+      title: `E2E Report Asg ${suffix}`,
+      description: "Seeded by E2E for report verification",
+      subject: "E2E",
+      due_date: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+      max_marks: 100,
+      students: [studentId],
+    });
+    const assignmentId = create.json?.data?.id ?? create.json?.data?.assignment?.id;
+    if (create.status !== 201 || !assignmentId) {
+      report("performance report (scores + attendance)", false, `assignment create status=${create.status} msg=${create.json?.message ?? ""}`);
+    } else {
+      // 10b. Student submits (real endpoint, same path the app calls)
+      const submit = await http("POST", `/student/assignments/${assignmentId}/submit`, studentToken, {
+        student_id: studentId,
+        content: "E2E submission answer",
+      });
+      // 10c. Find the submission id (teacher assignments list) and grade it
+      let submissionId = submit.json?.data?.id;
+      if (!submissionId) {
+        const subs = await http("GET", `/teacher/assignments/${assignmentId}/submissions`, teacherToken);
+        submissionId = (subs.json?.data ?? []).find((s) => s.student_id === studentId)?.id;
+      }
+      if (!submissionId) {
+        report("performance report (scores + attendance)", false, `no submission found (submit status=${submit.status} msg=${submit.json?.message ?? ""})`);
+      } else {
+        const grade = await http("PATCH", `/teacher/assignments/submission/${submissionId}/grade`, teacherToken, {
+          marks: 80,
+          feedback: "E2E grading",
+        });
+        // 10d. Student report — seeded assignment must appear with pct=80
+        const rep = await http("GET", `/reports/student/${studentId}`, studentToken);
+        const data = rep.json?.data;
+        const scores = data?.assignment_scores ?? [];
+        const seeded = scores.find((s) => s.assignment_id === assignmentId);
+        const pctOk = seeded ? seeded.pct === 80 : false;
+        const attOk = data ? Object.prototype.hasOwnProperty.call(data, "attendance_pct") : false;
+        report(
+          "performance report (scores + attendance)",
+          rep.status === 200 && scores.length >= 1 && pctOk && attOk,
+          `status=${rep.status} graded=${data?.graded_count} seededPct=${seeded?.pct} attendancePct=${data?.attendance_pct} (grade=${grade.status})`
+        );
+      }
+      // Cleanup seeded rows (submissions cascade via FK; belt & braces)
+      await admin.from("assignment_submissions").delete().eq("assignment_id", assignmentId);
+      await admin.from("assignment_students").delete().eq("assignment_id", assignmentId);
+      await admin.from("assignments").delete().eq("id", assignmentId);
+    }
+  } catch (e) {
+    report("performance report (scores + attendance)", false, e.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 11. Cleanup — remove everything created (rows + auth users)
 // ---------------------------------------------------------------------------
 async function del(table, col, val) {
   try { await admin.from(table).delete().eq(col, val); } catch { /* table missing */ }

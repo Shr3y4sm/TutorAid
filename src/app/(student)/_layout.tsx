@@ -120,6 +120,7 @@ export default function StudentLayout() {
       <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="schedule" options={{ href: null }} />
       <Tabs.Screen name="history" options={{ href: null }} />
+      <Tabs.Screen name="reports" options={{ href: null }} />
 
       {/* Hidden for now. Will be moved to Teacher Module */}
       <Tabs.Screen
