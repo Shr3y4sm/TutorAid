@@ -50,7 +50,7 @@ resources → attendance** against real infrastructure.
 
 - [ ] App store submission (screenshots, privacy policy for camera/mic, EAS `submit`).
 - [ ] Web beta: since `react-native-webrtc` is unreliable on iOS Safari, offer a browser join via a managed video iframe (Jitsi) for web users.
-- [ ] Performance graphs (`victory-native` or `react-native-svg-charts`) on existing grading/attendance data.
+- [x] Performance graphs — custom `react-native-svg` charts (no new deps): score bars, trend line, attendance ring; `GET /reports/student/:id`; student + teacher screens. E2E-verified 17/17.
 - [ ] Question-paper tagging: extend resources with a `type` enum (`note | paper | solution`) + filter UI.
 - [ ] Persistent in-app messaging (conversations/messages tables + Supabase Realtime).
 - [ ] Weekly/monthly summary: cron rollup into `summaries` table + "Reports" tab.
