@@ -29,7 +29,9 @@ export interface StudentReport {
 export async function getStudentReport(
   studentId: string
 ): Promise<StudentReport> {
-  return api<StudentReport>(
-    `/reports/student/${studentId}`
-  );
+  const response = await api<{
+    success: boolean;
+    data: StudentReport;
+  }>(`/reports/student/${studentId}`);
+  return response.data;
 }

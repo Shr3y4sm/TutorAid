@@ -33,18 +33,21 @@ function monthLabel(ym: string): string {
  * per-student report screen.
  */
 export default function ReportView({ report, studentName }: Props) {
-  const trend = report.assignment_scores.map((s) => ({
+  const scores = report?.assignment_scores ?? [];
+  const months = report?.attendance_by_month ?? [];
+
+  const trend = scores.map((s) => ({
     label: shortTitle(s.title),
     value: s.pct,
   }));
 
-  const bars = report.assignment_scores.map((s) => ({
+  const bars = scores.map((s) => ({
     label: shortTitle(s.title),
     value: s.pct,
     sublabel: `${s.marks}/${s.max_marks}`,
   }));
 
-  const attBars = report.attendance_by_month.map((m) => ({
+  const attBars = months.map((m) => ({
     label: monthLabel(m.month),
     value: m.pct,
     sublabel: `${m.present}/${m.total}`,
@@ -60,18 +63,18 @@ export default function ReportView({ report, studentName }: Props) {
       <View style={styles.statsRow}>
         <View style={[styles.statCard, styles.flex1]}>
           <Text style={styles.statValue}>
-            {report.overall_avg_pct == null
+            {report?.overall_avg_pct == null
               ? "—"
               : `${report.overall_avg_pct}%`}
           </Text>
           <Text style={styles.statLabel}>
-            Avg Score ({report.graded_count})
+            Avg Score ({report?.graded_count ?? 0})
           </Text>
         </View>
         <ProgressRing
-          pct={report.attendance_pct}
+          pct={report?.attendance_pct ?? null}
           size={96}
-          caption={`Attendance (${report.attendance_total})`}
+          caption={`Attendance (${report?.attendance_total ?? 0})`}
         />
       </View>
 
