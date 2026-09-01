@@ -152,6 +152,9 @@ export interface ControlsBarProps {
   onEndCall: () => void;
   onSwitchCamera?: () => void;
   cameraDirection?: 'front' | 'back';
+  /** Show an in-call class-notes button (teachers). */
+  notesAvailable?: boolean;
+  onNotes?: () => void;
 }
 
 export interface ParticipantsModalProps {

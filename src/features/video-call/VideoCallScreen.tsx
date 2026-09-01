@@ -12,7 +12,7 @@
  * The component handles everything: WebRTC, signalling, reconnection,
  * screen sharing, chat, hand raising, and UI.
  */
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -20,6 +20,7 @@ import { joinMeeting, endMeeting } from '@/api/meetings';
 import { useVideoCall } from './useVideoCall';
 import { VideoTile } from './components/VideoTile';
 import { ControlsBar } from './components/ControlsBar';
+import { ClassNotesOverlay } from './components/ClassNotesOverlay';
 import { ParticipantsModal } from './components/ParticipantsModal';
 import { StatusHeader } from './components/StatusHeader';
 
@@ -48,6 +49,10 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
   autoJoin = true,
 }) => {
     const v = useVideoCall({ classname, username, role, serverUrl, iceServers, autoJoin });
+
+  // ---- In-call class notes (teacher only) ----
+  const [notesVisible, setNotesVisible] = useState(false);
+  const canTakeNotes = role === 'teacher' && Boolean(entityId);
 
   // Guard so join/end API calls fire exactly once per mount.
   const joinedRef = useRef(false);
@@ -298,6 +303,8 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
             onEndCall={handleEndCall}
             onSwitchCamera={v.switchCamera}
             cameraDirection={v.cameraDirection}
+            notesAvailable={canTakeNotes}
+            onNotes={() => setNotesVisible(true)}
           />
 
           <ParticipantsModal
@@ -311,6 +318,13 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
             onSendChat={v.sendChatMessage}
             onSelectUser={v.selectUserForChat}
             onClose={v.closeParticipants}
+          />
+
+          <ClassNotesOverlay
+            visible={notesVisible}
+            meetCode={classname}
+            teacherId={entityId}
+            onClose={() => setNotesVisible(false)}
           />
         </View>
       </SafeAreaView>
@@ -548,6 +562,8 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
           onHandRaise={v.toggleHandRaise}
           onParticipants={v.openParticipants}
             onEndCall={handleEndCall}
+            notesAvailable={canTakeNotes}
+            onNotes={() => setNotesVisible(true)}
           />
 
         <ParticipantsModal
@@ -561,6 +577,13 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
           onSendChat={v.sendChatMessage}
           onSelectUser={v.selectUserForChat}
           onClose={v.closeParticipants}
+        />
+
+        <ClassNotesOverlay
+          visible={notesVisible}
+          meetCode={classname}
+          teacherId={entityId}
+          onClose={() => setNotesVisible(false)}
         />
       </View>
     </SafeAreaView>

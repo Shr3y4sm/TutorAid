@@ -27,6 +27,8 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   onEndCall,
   onSwitchCamera,
   cameraDirection,
+  notesAvailable,
+  onNotes,
 }) => {
   return (
     <View style={styles.controlsRow}>
@@ -81,6 +83,12 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
       {onSwitchCamera && (
         <Pressable style={styles.controlRoundButton} onPress={onSwitchCamera}>
           <Text style={styles.controlIcon}>🔄</Text>
+        </Pressable>
+      )}
+
+      {notesAvailable && onNotes && (
+        <Pressable style={styles.controlRoundButton} onPress={onNotes}>
+          <Text style={styles.controlIcon}>📝</Text>
         </Pressable>
       )}
 

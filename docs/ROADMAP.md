@@ -35,7 +35,7 @@ resources → attendance** against real infrastructure.
 
 ### V1 feature slices
 - [x] **Call log / history** — teacher + student history screens (`getTeacherMeetings`, `GET /meetings/student/:studentId/history`). Both dashboards have a "Class History" quick action.
-- [ ] **Class pointer notes** — `class_notes` table + in-call FAB to jot notes about a student/class.
+- [x] **Class pointer notes** — `class_notes` table + teacher-only in-call Notes overlay (📝 button in ControlsBar).
 - [x] **Cancellation auto-notify** — `DELETE /teacher/schedule/:id` now fetches the schedule, deletes it, then fire-and-forget notifies every enrolled student ("Class Cancelled"). Teacher confirm dialog reflects the behavior.
 - [ ] **Fee reminders (light)** — `fee_reminders` table + daily job + in-app "Fees" screen + push notification.
 

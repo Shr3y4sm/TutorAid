@@ -14,6 +14,7 @@ import teacherScheduleRoutes from "./routes/teacherSchedule.routes";
 import teacherAiRoutes from "./routes/teacherAi.routes";
 import authRoutes from "./routes/auth.routes";
 import meetingRoutes from "./routes/meeting.routes";
+import classNoteRoutes from "./routes/classNote.routes";
 import { errorMiddleware } from "./middleware/error.middleware";
 import router from "./routes/resource.routes";
 import { authenticate } from "./middleware/auth.middleware";
@@ -53,6 +54,7 @@ app.use("/teacher", authenticate, teacherRoutes);
 
 app.use("/resources", authenticate, router);
 app.use("/meetings", authenticate, meetingRoutes);
+app.use("/class-notes", authenticate, classNoteRoutes);
 
 app.use(errorMiddleware);
 export default app;
