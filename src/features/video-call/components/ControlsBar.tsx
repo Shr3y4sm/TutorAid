@@ -94,6 +94,12 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
         </Pressable>
       )}
 
+      {whiteboardAvailable && onWhiteboard && (
+        <Pressable style={styles.controlRoundButton} onPress={onWhiteboard}>
+          <Text style={styles.controlIcon}>🖍️</Text>
+        </Pressable>
+      )}
+
       <Pressable style={styles.endButton} onPress={onEndCall}>
         <Text style={styles.endButtonIcon}>📞</Text>
       </Pressable>
