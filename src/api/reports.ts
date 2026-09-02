@@ -35,3 +35,24 @@ export async function getStudentReport(
   }>(`/reports/student/${studentId}`);
   return response.data;
 }
+
+export interface PeriodSummary {
+  student_id: string;
+  range: "week" | "month";
+  period_start: string;
+  classes_held: number;
+  present_count: number;
+  absent_count: number;
+  attendance_pct: number | null;
+  cancelled_classes: number;
+}
+
+export async function getStudentPeriodSummary(
+  studentId: string,
+  range: "week" | "month" = "week"
+): Promise<PeriodSummary> {
+  const response = await api<{ success: boolean; data: PeriodSummary }>(
+    `/reports/student/${studentId}/summary?range=${range}`
+  );
+  return response.data;
+}

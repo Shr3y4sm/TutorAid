@@ -282,6 +282,22 @@ if (teacherToken && teacherId && studentId) {
           rep.status === 200 && scores.length >= 1 && pctOk && attOk,
           `status=${rep.status} graded=${data?.graded_count} seededPct=${seeded?.pct} attendancePct=${data?.attendance_pct} (grade=${grade.status})`
         );
+
+        // 10e. Period summary (week rollup) — attendance was marked today and
+        // the schedule was cancelled earlier today, so both must be >= 1.
+        const sum = await http("GET", `/reports/student/${studentId}/summary?range=week`, studentToken);
+        const sd = sum.json?.data;
+        const sumOk =
+          sum.status === 200 &&
+          typeof sd?.classes_held === "number" &&
+          typeof sd?.cancelled_classes === "number" &&
+          sd.classes_held >= 1 &&
+          sd.cancelled_classes >= 1;
+        report(
+          "period summary (week rollup)",
+          sumOk,
+          `status=${sum.status} held=${sd?.classes_held} present=${sd?.present_count} cancelled=${sd?.cancelled_classes} attPct=${sd?.attendance_pct}`
+        );
       }
       // Cleanup seeded rows (submissions cascade via FK; belt & braces)
       await admin.from("assignment_submissions").delete().eq("assignment_id", assignmentId);

@@ -5,6 +5,7 @@ import BarChart from "@/components/charts/BarChart";
 import ProgressRing from "@/components/charts/ProgressRing";
 import TrendLine from "@/components/charts/TrendLine";
 import { StudentReport } from "@/api/reports";
+import PeriodSummaryCard from "@/components/reports/PeriodSummary";
 
 interface Props {
   report: StudentReport;
@@ -77,6 +78,11 @@ export default function ReportView({ report, studentName }: Props) {
           caption={`Attendance (${report?.attendance_total ?? 0})`}
         />
       </View>
+
+      {/* ---- Weekly / monthly rollup ---- */}
+      {report?.student_id ? (
+        <PeriodSummaryCard studentId={report.student_id} />
+      ) : null}
 
       {/* ---- Score trend ---- */}
       <View style={styles.card}>

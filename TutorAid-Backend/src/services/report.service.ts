@@ -140,4 +140,69 @@ export class ReportService {
       attendance_by_month,
     };
   }
+
+}
+
+
+export interface PeriodSummary {
+  student_id: string;
+  range: "week" | "month";
+  period_start: string; // YYYY-MM-DD (inclusive)
+  classes_held: number; // classes with an attendance record
+  present_count: number;
+  absent_count: number;
+  attendance_pct: number | null;
+  cancelled_classes: number;
+}
+
+/**
+ * Rolling period rollup for a student:
+ *  - classes held / attended / missed (from the canonical attendance table)
+ *  - cancelled classes in the period (student's "Class Cancelled"
+ *    notifications — emitted by the schedule-delete auto-notify)
+ */
+export class PeriodSummaryService {
+  static async getStudentPeriodSummary(
+    studentId: string,
+    range: "week" | "month" = "week"
+  ): Promise<PeriodSummary> {
+    const days = range === "month" ? 30 : 7;
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    const startDate = start.toISOString().slice(0, 10); // class_date form
+    const startIso = start.toISOString(); // created_at form
+
+    const [attRes, notifRes] = await Promise.all([
+      supabase
+        .from("attendance")
+        .select("class_date, present")
+        .eq("student_id", studentId)
+        .gte("class_date", startDate),
+      supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("title", "Class Cancelled")
+        .gte("created_at", startIso),
+    ]);
+
+    if (attRes.error) throw new ApiError(400, attRes.error.message);
+    if (notifRes.error) throw new ApiError(400, notifRes.error.message);
+
+    const rows = attRes.data ?? [];
+    const presentCount = rows.filter((r: any) => r.present).length;
+    const total = rows.length;
+
+    return {
+      student_id: studentId,
+      range,
+      period_start: startDate,
+      classes_held: total,
+      present_count: presentCount,
+      absent_count: total - presentCount,
+      attendance_pct:
+        total > 0 ? Math.round((presentCount / total) * 100) : null,
+      cancelled_classes: notifRes.count ?? 0,
+    };
+  }
 }

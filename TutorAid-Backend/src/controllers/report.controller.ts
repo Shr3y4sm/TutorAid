@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { ReportService } from "../services/report.service";
+import { ReportService, PeriodSummaryService } from "../services/report.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -15,5 +15,22 @@ export const getStudentReport = asyncHandler(
     const studentId = routeParam(req, "id");
     const report = await ReportService.getStudentReport(studentId);
     return ApiResponse.success(res, report, "Student report generated.");
+  }
+);
+
+export const getStudentPeriodSummary = asyncHandler(
+  async (req: Request, res: Response) => {
+    const studentId = routeParam(req, "id");
+    const raw = req.query.range;
+    const range = raw === "month" ? "month" : "week";
+    const summary = await PeriodSummaryService.getStudentPeriodSummary(
+      studentId,
+      range
+    );
+    return ApiResponse.success(
+      res,
+      summary,
+      "Period summary generated."
+    );
   }
 );

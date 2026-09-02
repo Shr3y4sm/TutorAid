@@ -53,7 +53,7 @@ resources → attendance** against real infrastructure.
 - [x] Performance graphs — custom `react-native-svg` charts (no new deps): score bars, trend line, attendance ring; `GET /reports/student/:id`; student + teacher screens. E2E-verified 17/17.
 - [ ] Question-paper tagging: extend resources with a `type` enum (`note | paper | solution`) + filter UI.
 - [ ] Persistent in-app messaging (conversations/messages tables + Supabase Realtime).
-- [ ] Weekly/monthly summary: cron rollup into `summaries` table + "Reports" tab.
+- [x] Weekly/monthly summary — `GET /reports/student/:id/summary?range=week|month` (classes held/present/missed, cancelled via auto-notify notifications), Week|Month toggle card on both report screens. E2E-verified 18/18.
 
 ---
 
