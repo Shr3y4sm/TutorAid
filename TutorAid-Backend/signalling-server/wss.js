@@ -117,6 +117,7 @@ const onMessage = (ws, socket, message) => {
           teacher: null,  // username of the teacher (if any)
           screenSharer: null,
           raisedHands: [],
+          whiteboard: { strokes: [], bg: null },
         };
       }
       const classroom = classes[classname];
@@ -144,6 +145,10 @@ const onMessage = (ws, socket, message) => {
       });
       send(socket, 'hand_raise_state', {
         raisedHands: classroom.raisedHands || [],
+      });
+      send(socket, 'whiteboard_state', {
+        strokes: classroom.whiteboard?.strokes || [],
+        bg: classroom.whiteboard?.bg || null,
       });
 
       // Tell existing participants that a new user has arrived.
@@ -382,6 +387,88 @@ const onMessage = (ws, socket, message) => {
 
     case 'ping': {
       send(socket, 'pong', { ts: Date.now() });
+      break;
+    }
+
+    case 'whiteboard': {
+      const classroom = classes[classname];
+      if (!classroom) break;
+
+      // Only the teacher may draw / annotate.
+      if (classroom.roles[username] !== 'teacher') {
+        send(socket, 'error', { message: 'Only the teacher can use the whiteboard.' });
+        break;
+      }
+
+      const { action } = body;
+      if (!classroom.whiteboard) {
+        classroom.whiteboard = { strokes: [], bg: null };
+      }
+      const wb = classroom.whiteboard;
+
+      switch (action) {
+        case 'stroke': {
+          // { id, points: [{x,y}...], color, width, tool }
+          if (body.stroke && Array.isArray(body.stroke.points)) {
+            wb.strokes.push({
+              id: body.stroke.id,
+              points: body.stroke.points,
+              color: body.stroke.color,
+              width: body.stroke.width,
+              tool: body.stroke.tool || 'pen',
+            });
+          }
+          break;
+        }
+        case 'stroke_progress': {
+          // Live in-progress stroke: { id, points: [...] }
+          // Store as a temporary "live" stroke that gets finalized on 'stroke'
+          if (body.stroke && Array.isArray(body.stroke.points)) {
+            wb.liveStroke = {
+              id: body.stroke.id,
+              points: body.stroke.points,
+              color: body.stroke.color,
+              width: body.stroke.width,
+              tool: body.stroke.tool || 'pen',
+            };
+          }
+          break;
+        }
+        case 'undo': {
+          wb.strokes.pop();
+          break;
+        }
+        case 'clear': {
+          wb.strokes = [];
+          wb.liveStroke = null;
+          break;
+        }
+        case 'bg': {
+          // Set annotation background (base64 image data) — teacher-only.
+          wb.bg = body.data || null;
+          break;
+        }
+        default:
+          send(socket, 'error', { message: `Unknown whiteboard action: ${action}` });
+          return;
+      }
+
+      // Broadcast whiteboard state to everyone else in the room.
+      Object.keys(classroom.users || {}).forEach((user) => {
+        if (user !== username) {
+          const wsClient = classroom.users[user];
+          if (wsClient) {
+            send(wsClient, 'whiteboard', {
+              action,
+              stroke: action === 'stroke' || action === 'stroke_progress'
+                ? (action === 'stroke' ? wb.strokes[wb.strokes.length - 1] : wb.liveStroke)
+                : undefined,
+              bg: action === 'bg' ? wb.bg : undefined,
+              strokeCount: wb.strokes.length,
+            });
+          }
+        }
+      });
       break;
     }
 

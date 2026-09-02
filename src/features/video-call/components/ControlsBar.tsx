@@ -29,6 +29,8 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
   cameraDirection,
   notesAvailable,
   onNotes,
+  whiteboardAvailable,
+  onWhiteboard,
 }) => {
   return (
     <View style={styles.controlsRow}>

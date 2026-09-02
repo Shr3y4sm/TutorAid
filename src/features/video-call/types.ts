@@ -90,6 +90,39 @@ export interface ChatMessageBody {
 }
 
 // ---------------------------------------------------------------------------
+// Whiteboard
+// ---------------------------------------------------------------------------
+
+/** A point in normalized coordinates (0-1 range). */
+export interface WhiteboardPoint {
+  x: number;
+  y: number;
+}
+
+/** A single stroke on the whiteboard. */
+export interface WhiteboardStroke {
+  id: string;
+  points: WhiteboardPoint[];
+  color: string;
+  width: number;
+  tool: 'pen' | 'highlighter' | 'eraser';
+}
+
+/** Body of the `whiteboard` message (teacher-only, broadcast to room). */
+export interface WhiteboardBody {
+  action: 'stroke' | 'stroke_progress' | 'undo' | 'clear' | 'bg';
+  stroke?: WhiteboardStroke;
+  bg?: string | null;
+  strokeCount?: number;
+}
+
+/** Body of the `whiteboard_state` message (sent to late joiners). */
+export interface WhiteboardStateBody {
+  strokes: WhiteboardStroke[];
+  bg: string | null;
+}
+
+// ---------------------------------------------------------------------------
 // UI state
 // ---------------------------------------------------------------------------
 
@@ -155,6 +188,8 @@ export interface ControlsBarProps {
   /** Show an in-call class-notes button (teachers). */
   notesAvailable?: boolean;
   onNotes?: () => void;
+  whiteboardAvailable?: boolean;
+  onWhiteboard?: () => void;
 }
 
 export interface ParticipantsModalProps {

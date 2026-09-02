@@ -21,6 +21,7 @@ import { useVideoCall } from './useVideoCall';
 import { VideoTile } from './components/VideoTile';
 import { ControlsBar } from './components/ControlsBar';
 import { ClassNotesOverlay } from './components/ClassNotesOverlay';
+import { WhiteboardOverlay } from './components/WhiteboardOverlay';
 import { ParticipantsModal } from './components/ParticipantsModal';
 import { StatusHeader } from './components/StatusHeader';
 
@@ -52,6 +53,8 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
 
   // ---- In-call class notes (teacher only) ----
   const [notesVisible, setNotesVisible] = useState(false);
+  // ---- Whiteboard overlay (teacher only) ----
+  const [whiteboardVisible, setWhiteboardVisible] = useState(false);
   const canTakeNotes = role === 'teacher' && Boolean(entityId);
 
   // Guard so join/end API calls fire exactly once per mount.
@@ -305,6 +308,8 @@ export const VideoCallScreen: React.FC<VideoCallScreenProps> = ({
             cameraDirection={v.cameraDirection}
             notesAvailable={canTakeNotes}
             onNotes={() => setNotesVisible(true)}
+            whiteboardAvailable={canTakeNotes}
+            onWhiteboard={() => setWhiteboardVisible(true)}
           />
 
           <ParticipantsModal
